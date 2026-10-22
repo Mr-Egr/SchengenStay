@@ -61,26 +61,34 @@ requests, loading/error handling, and consent-based, validated local persistence
 affirmative, stale results are discarded after edits, storage is opt-in and
 clearable, and reload/privacy/integration tests pass. Implemented under the user’s
 Stage 5 authorization; see PROGRESS.md for actual verification and limitations.
-JSON import/export remains Stage 7, not part of this integration.
+JSON import/export remains separately authorized, not part of this integration.
 
-## Stage 6 — Planner and calendar integration review
+## Stage 6 — Visa context and calculation limitations (implemented)
 
-**Tasks:** review the already-built forms/calendar against real Python responses;
-refine violation explanations, maximum/earliest search bounds, keyboard use, and
-planned-versus-confirmed separation using integration and accessibility evidence.
+The user's Stage 6 instruction supersedes the earlier planner/calendar review
+scope and establishes Stage 7 as final release validation and Stage 8 as public
+deployment. Stage 6 adds explicit uncertain/special-context handling, narrowly
+defined visa-date consistency feedback, official-source scope notes and tests.
+The proven rolling-day engine and planner remain unchanged. See
+[context boundaries](docs/LEGAL_CONTEXT.md) for what is and is not assessed.
 
-**Done when:** test plan can be created, modified and deleted without changing actual history; results match Python API, keyboard navigation works.
+**Done when:** unknown/unsupported context cannot produce positive arithmetic
+results; validation, translated explanations, memory-only visa details, browser
+parity and both CI platforms pass. No visa or residence authorisation is inferred.
 
-## Stage 7 — Persistence and privacy review
+## Stage 7 — Final release validation (not started)
 
-**Tasks:** review Stage 5 consent/local storage, add strict versioned JSON import/export
-if separately authorized, verify delete-all and size/count limits, and audit privacy copy.
+**Tasks, only after authorization:** broader browser/device/accessibility testing,
+official reference review, performance, privacy/storage audit and release checks.
+JSON import/export still requires separate authorization.
 
-**Done when:** export->clear->import roundtrip is accurate, bad files rejected, no history transmitted to remote servers.
+**Done when:** the separately agreed release gates pass and remaining risks are
+reviewed. No public deployment in this stage.
 
-## Stage 8 — QA, official cross-check and release
+## Stage 8 — Public deployment (not started)
 
-**Tasks:** broaden unit/property/regression tests, cross-check the supported examples with EC reference; test interface iPhone/Android/desktop; audit accessibility; check browser performance; deploy free static hosting; finish README and product screenshots.
+**Tasks, only after authorization:** deploy to free static hosting after release
+validation, verify the public URL, and publish accurate documentation/screenshots.
 
 **Done when:** CI green, public URL verified, no misleading 'legal permission' claims, tested use cases documented, release tagged.
 

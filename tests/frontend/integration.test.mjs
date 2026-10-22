@@ -29,6 +29,21 @@ test('unexpected reason and validation codes have readable bilingual fallback te
   }
 });
 
+test('legal context uses only explicit fields and never persists visa details', () => {
+  const context = { checkDate: '2024-03-31', scope: 'COUNTABLE_SHORT_STAYS', complete: true,
+    legalKind: 'SHORT_STAY_VISA', visaDatesEnabled: true,
+    visaDates: { valid_from: '2024-01-01', valid_until: '2024-12-31', passport: 'must not travel' } };
+  const request = calculationRequest('check_history', [trip], context);
+  assert.deepEqual(request.legal_context, { kind: 'SHORT_STAY_VISA', valid_from: '2024-01-01', valid_until: '2024-12-31' });
+  assert.deepEqual(calculationRequest('check_history', [], { ...context, legalKind: 'UNKNOWN' }).legal_context, { kind: 'UNKNOWN' });
+  assert.deepEqual(calculationRequest('check_history', [], { ...context, visaDatesEnabled: false }).legal_context, { kind: 'SHORT_STAY_VISA' });
+  let stored;
+  const persistence = createPersistence(() => ({ setItem: (key, value) => { stored = value; } }));
+  persistence.enable(); persistence.save([trip], 'en', 'light');
+  assert.deepEqual(Object.keys(JSON.parse(stored)).sort(), ['consent', 'language', 'schema_version', 'theme', 'trips']);
+  assert.doesNotMatch(stored, /legal_context|valid_from|valid_until|passport/);
+});
+
 test('ongoing model is explicit; calendar only marks through confirmed date', () => {
   const store = createStore({ today: '2024-03-31' });
   const ongoing = store.saveTrip({ ...trip, kind: 'ongoing', entry: '2024-03-01', exit: '' }).record;

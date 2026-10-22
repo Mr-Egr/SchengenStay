@@ -1,5 +1,111 @@
 # Progress record
 
+## 2026-10-23 — Stage 6 context and calculation limitations
+
+Started from clean `main`/`origin/main` at `f09ec43`. Read the product, calculation,
+architecture, roadmap and progress documents; audited the implemented Python
+engine/planner, JSON bridge, context inputs, date components, result presentation,
+state, persistence and tests. The user's current instruction supersedes the old
+Stage 6 roadmap scope. Stage 7 release validation and Stage 8 deployment have
+not started.
+
+### Audit and implemented scope
+
+- Generic scope choices did not explain individual visa/residence/mixed cases.
+  Added an optional request-context selector with specific EN/RU explanations.
+  Unknown countability blocks with `INSUFFICIENT_DATA`; unsupported legal
+  questions block with `OUT_OF_SCOPE` before occupancy calculations.
+- History edits retained old completeness/countability declarations. Those
+  declarations and ongoing confirmation now reset after history mutations;
+  the chosen special context remains selected. Scenarios remain independent.
+- The JSON adapter discarded unrecognized trip/proposal fields. Such fields now
+  fail validation rather than silently ignoring possible countability metadata.
+- Optional C-visa date entry checks strict dates and chronological order only.
+  Missing/reversed/impossible dates have explicit outcomes. An ordered pair is
+  never `WITHIN_RULE` for a visa; C-visa conditions assessment remains unsupported.
+  No entry/duration allowance, residency right or permission is inferred.
+- Standard arithmetic remains available for complete, explicitly countable short
+  stays, including visa-free or C-visa travel. Its scope does not establish visa
+  compliance. Unknown/special periods are not automatically counted or exempted.
+- Context and visa drafts stay in memory and never enter opt-in history storage.
+  Existing date editors, seven screens, themes, worker/static hosting and all six
+  top-level statuses remain. No new dependency, backend or personal-data field.
+
+The actual Stage 1–3 date, validation, compliance, planner and model source files
+are unchanged. Legacy documented requests without context retain their result
+shape; context-bearing requests add `context_review`. Details, source URLs and
+scope limits are in [docs/LEGAL_CONTEXT.md](docs/LEGAL_CONTEXT.md) and architecture
+section 18. No broad visa adjudication or live official-calculator parity is claimed.
+
+### Files
+
+New:
+
+- `src/schengenstay/context.py` — conservative scope review and date consistency.
+- `web/scripts/context-ui.js`, `context-i18n.js` — reusable optional controls,
+  separate context evidence and bilingual text with fallback explanations.
+- `tests/test_context.py`, `tests/frontend/context-browser.mjs` — context/date
+  unit/property tests and real browser scope/privacy/date interaction checks.
+- `docs/LEGAL_CONTEXT.md` — supported questions, source register and exclusions.
+
+Modified:
+
+- `src/schengenstay/browser.py` and `web/python/schengenstay.zip` — context gating,
+  strict record fields, additive JSON evidence and regenerated deterministic bundle.
+- `web/scripts/app.js`, `i18n.js`, `pyodide-bridge.js`, `results.js`, `views.js`,
+  `web/styles/main.css` — input state, re-confirmation, bridge whitelist, result
+  separation, help and scoped styling; no JavaScript compliance calculations.
+- `tests/browser_cases.py`, `tests/frontend/integration.test.mjs`,
+  `tests/frontend/python-browser.mjs` — new context parity and privacy checks;
+  existing browser cases now explicitly reconfirm after history edits, retaining
+  all their numerical/status assertions and adding assertions for the new gate.
+- README.md, ARCHITECTURE.md, CALCULATION_RULES.md, CONTRIBUTING.md, ROADMAP.md,
+  docs/FRONTEND.md and this record — accurate Stage 6 scope and developer guidance.
+
+### Verification actually performed
+
+Python 3.12.14, Node 24.19.0, existing Playwright 1.62.1 and Chrome 155.0.8059.85
+on Windows; no package installations. Pytest used the ignored `.tmp/pytest`
+workspace directory because of local sandbox temporary-directory permissions.
+
+| Check | Result |
+| --- | --- |
+| `python -m pytest -q` | 389 passed, including all 305 prior tests and 84 context cases |
+| `ruff check .` | Passed |
+| `python -m pip check` | No broken requirements |
+| `node --test tests/frontend/*.test.mjs` | 33 passed |
+| `node tests/frontend/browser.mjs` | 26 interface/date/accessibility checks passed |
+| `node tests/frontend/python-browser.mjs` | 19 real integration checks; 96 complete native-Python/Pyodide comparisons passed |
+| `python scripts/build_browser.py --check` | Exact source/archive equality passed, including platform/line-ending regressions |
+| `python scripts/check_docs.py` | Local links/anchors and all five executable API examples passed |
+| `git diff --check` | No whitespace errors |
+
+Parity retains the original 18 direct-domain reference cases and adds 78 native
+boundary references across all six methods and context/date combinations. Their
+expected status/precedence/no-success semantics are independently asserted in
+unit tests. A new 200-example deterministic property checks arbitrary visa date
+pairs without deriving legal success. Browser checks cover EN/RU, both themes,
+320px context/date forms, keyboard/Escape, reconfirmation, privacy, stale-response
+handling and unchanged existing responsive/500-record workflows. First use was
+about 2.5 seconds on desktop and 2.4 seconds in a mobile viewport in this local
+run; these are observations, not physical-phone or slow-network guarantees.
+
+The unchanged CI matrix runs Python 3.12/Node 22 checks on Ubuntu and Windows.
+The actual post-push run conclusion and link are verified and reported in the
+delivery message, separately from local results.
+
+### Remaining limitations
+
+Official Commission and national government sources were verified for the narrow
+scope statements and date-field meanings in the source register. The attempted
+EUR-Lex text was blocked by an anti-bot challenge; no rule depends on it. No
+pending-application, stamp, national-extension, bilateral, nationality or mixed
+residence entitlement rule was verified or implemented. Entry limits and visa
+duration are separate unimplemented constraints; historical country membership
+is not inferred. User declarations remain unverifiable. No physical-device,
+Safari/Firefox or screen-reader certification, release approval, live Commission
+calculator comparison or deployment is claimed.
+
 ## 2026-10-23 — Repair cross-platform CI archive checks
 
 Inspected GitHub Actions through the installed GitHub CLI. Both the Stage 5

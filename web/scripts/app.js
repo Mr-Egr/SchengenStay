@@ -13,6 +13,10 @@ const persistence = createPersistence();
 const restored = persistence.load(today);
 const state = { language: restored.data?.language ?? 'en', theme: restored.data?.theme ?? 'light', month: today.slice(0, 7), selectedDay: today, checkDate: today, complete: false, scope: 'UNKNOWN', ongoing: false, budget: 10000, runtime: 'idle', runtimeError: null, storageError: restored.error ?? null };
 state.checkDateDraft = createDateDraft(today, state.language);
+state.legalKind = 'ARITHMETIC_ONLY';
+state.visaDatesEnabled = false;
+state.visaDates = { valid_from: '', valid_until: '' };
+state.visaDrafts = { valid_from: createDateDraft('', state.language), valid_until: createDateDraft('', state.language) };
 const savedTrips = [...(restored.data?.trips ?? [])];
 let restoringId;
 const store = createStore({ planningDate: () => state.checkDate, makeId: () => restoringId ?? crypto.randomUUID() });
@@ -32,6 +36,12 @@ function publish(key) {
   } else if (value?.state === 'error') announce(t('state.error.title'));
 }
 function validDate() { return validateDateFields(document.querySelector('main')); }
+function invalidateEvidence() {
+  results.invalidate();
+  const t = translator(state.language);
+  document.querySelectorAll('[data-result-slot]').forEach(node => node.replaceChildren(computationState(t, 'empty')));
+  document.querySelectorAll('.metrics').forEach(node => node.replaceWith(metrics({ t, store, results: results.values, language: state.language })));
+}
 function runHistory() {
   if (!validDate()) return;
   results.run('usage', () => request('usage_on'), render);
@@ -78,7 +88,11 @@ function render(focus = false) {
     openTrip: item => openEditor(ctx, 'trip', item),
     openScenario: item => openEditor(ctx, 'scenario', item),
     remove: (kind, item) => confirmRemoval(ctx, kind, item),
-    changed: (message, historyChanged = false) => { if (historyChanged) state.ongoing = false; results.invalidate(); persist(); render(); announce(message); },
+    changed: (message, historyChanged = false) => {
+      if (historyChanged) { state.ongoing = false; state.complete = false; state.scope = 'UNKNOWN'; }
+      results.invalidate(); persist(); render(); announce(historyChanged ? `${message} ${t('legal.reconfirm')}` : message);
+    },
+    setVisaDate: (name, value) => { state.visaDates[name] = value; invalidateEvidence(); },
     showMonth: month => {
       if (!month) return;
       const previous = document.activeElement?.dataset.focus;
@@ -95,10 +109,8 @@ function render(focus = false) {
       const wasOngoing = state.ongoing;
       state.checkDate = day;
       state.ongoing = false;
-      results.invalidate();
       // Invalidate evidence immediately without replacing the active date editor.
-      document.querySelectorAll('[data-result-slot]').forEach(node => node.replaceChildren(computationState(t, 'empty')));
-      document.querySelectorAll('.metrics').forEach(node => node.replaceWith(metrics({ t, store, results: results.values, language: state.language })));
+      invalidateEvidence();
       const ongoing = document.getElementById('field-ongoing');
       if (ongoing) ongoing.checked = false;
       if (wasOngoing) {

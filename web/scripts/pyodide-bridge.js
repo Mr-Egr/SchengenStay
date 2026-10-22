@@ -69,7 +69,10 @@ export function calculationRequest(method, trips, context, extra = {}) {
       : { kind: 'completed', id: trip.id, entry: trip.entry, exit: trip.exit }),
     as_of: context.checkDate || null, scope: context.scope,
     history_complete: context.complete, ongoing_confirmed: context.ongoing,
-    max_inspected_days: context.budget, ...extra };
+    max_inspected_days: context.budget,
+    ...(context.legalKind ? { legal_context: { kind: context.legalKind,
+      ...(context.legalKind === 'SHORT_STAY_VISA' && context.visaDatesEnabled
+        ? { valid_from: context.visaDates.valid_from, valid_until: context.visaDates.valid_until } : {}) } } : {}), ...extra };
 }
 
 // Each input change advances the revision immediately, even while startup awaits.

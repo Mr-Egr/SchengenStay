@@ -3,6 +3,7 @@ import { formatDate } from './dates.js';
 import { dateInput } from './date-input.js';
 import { messages } from './i18n.js';
 import { computationState } from './components.js';
+import { legalContextInput, contextReview } from './context-ui.js';
 
 export function codeText(ctx, family, code) {
   const key = `${family}.${code}`;
@@ -24,6 +25,7 @@ export function contextPanel(ctx) {
       field('budget', t('context.budget'), { type: 'number', min: 1, max: 10000, step: 1, value: ctx.budget, onChange: event => ctx.setContext('budget', Number(event.target.value)) })),
     checkbox('complete', t('context.complete'), ctx.complete, value => ctx.setContext('complete', value)),
     field('scope', t('context.scope'), { value: ctx.scope, options: ['UNKNOWN', 'COUNTABLE_SHORT_STAYS', 'SPECIAL_LEGAL_CONTEXT', 'VISA_VALIDITY', 'HISTORICAL_GEOGRAPHY'].map(value => [value, t(`context.${value}`)]), onChange: event => ctx.setContext('scope', event.target.value) }),
+    legalContextInput(ctx),
     ctx.store.trips.some(item => item.kind === 'ongoing') ? checkbox('ongoing', t('context.ongoing'), ctx.ongoing, value => ctx.setContext('ongoing', value)) : null,
     h('p', { className: 'hint' }, t('context.note')),
     h('div', { className: 'row-actions' }, button(t('calculator.button'), ctx.runHistory, { kind: 'primary', 'data-focus': 'run-history' }),
@@ -62,8 +64,9 @@ export function resultCard(ctx, result, title = 'result.status') {
   const search = Object.hasOwn(result, 'planning_status');
   return h('article', { className: `python-result status-${result.status}`, 'data-result-status': result.status },
     status(ctx, result.status, title), search ? status(ctx, result.planning_status, 'result.planning') : null,
-    h('ul', { className: 'result-reasons' }, [...(result.reason_codes ?? []), ...(result.warnings ?? [])].map(code => h('li', { 'data-reason': code }, codeText(ctx, 'reason', code)))),
+    h('ul', { className: 'result-reasons' }, [...(result.reason_codes ?? []), ...(result.warnings ?? [])].filter(code => !result.context_review?.reason_codes?.includes(code)).map(code => h('li', { 'data-reason': code }, codeText(ctx, 'reason', code)))),
     result.issues?.length ? h('ul', { className: 'result-issues' }, result.issues.map(issue => h('li', {}, codeText(ctx, 'issue', issue.code), ' ', h('code', {}, issue.field)))) : null,
+    contextReview(ctx, result.context_review),
     snapshot(ctx, result.snapshot, 'result.snapshot'), snapshot(ctx, result.first_violation, 'result.violation'),
     details(ctx, result, ['first_violation_date', 'inspected_dates', 'inspected_through', 'search_horizon_end', 'consecutive_days', 'latest_compliant_exit', 'entry', 'exit', 'candidates_checked', 'inspected_plan_days']),
     Object.hasOwn(result, 'maximum_proven') && result.consecutive_days !== null ? h('p', { className: 'result-proof' }, ctx.t(result.maximum_proven ? 'result.proven' : 'result.partial')) : null,

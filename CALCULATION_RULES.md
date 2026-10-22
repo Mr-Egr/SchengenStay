@@ -72,6 +72,13 @@ continuous length over 90. Historical violations remain separate and visible.
 
 ## 7. Result contract
 
+Stage 6's optional context gate does not change any day-count rule. Unknown
+countability blocks arithmetic; specified unsupported questions return
+`OUT_OF_SCOPE` without excluding or exempting dates. Optional visa-date validation
+checks real dates and their order only; it cannot establish visa validity or
+permission to travel. Entry/duration limits remain unsupported.
+See [Stage 6 source register and boundaries](docs/LEGAL_CONTEXT.md).
+
 Return typed data (no magic `True/False` only):
 
 - `status`: `WITHIN_RULE | VIOLATION | INVALID_INPUT | INSUFFICIENT_DATA | OUT_OF_SCOPE | HORIZON_LIMIT`

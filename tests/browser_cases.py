@@ -15,7 +15,8 @@ from schengenstay import (
     max_continuous_stay,
     usage_on,
 )
-from schengenstay.browser import serialize
+from schengenstay.browser import dispatch, serialize
+from schengenstay.context import ContextKind
 
 
 def cases():
@@ -73,6 +74,27 @@ def cases():
     large = [ShortStay(str(i), date(1700, 1, 1) + timedelta(days=i * 181),
                        date(1700, 1, 1) + timedelta(days=i * 181)) for i in range(500)]
     add("500_records", "check_history", large, day, check_history(large, day))
+    # The same new boundary contracts run in native CPython and real Pyodide.
+    # Independent status/date/precedence assertions live in test_context.py.
+    methods = [
+        ("usage_on", {}), ("check_history", {}),
+        ("check_plan", {"plan": {"entry": "2024-04-01", "exit": "2024-04-02"}}),
+        ("max_continuous_stay", {"arrival": "2024-04-01", "horizon_days": 91}),
+        ("find_earliest_entry", {"search_start": "2024-04-01", "length_days": 1, "horizon_days": 1}),
+        ("compare_scenarios", {"scenarios": [{"entry": "2024-04-01", "exit": "2024-04-02"}]}),
+    ]
+    contexts = [{"kind": kind} for kind in ContextKind] + [
+        {"kind": "SHORT_STAY_VISA", "valid_from": "2024-02-29", "valid_until": "2024-02-29"},
+        {"kind": "SHORT_STAY_VISA", "valid_from": "2024-03-01", "valid_until": "2024-02-29"},
+        {"kind": "SHORT_STAY_VISA", "valid_from": "2024-03-01", "valid_until": ""},
+    ]
+    for index, context in enumerate(contexts):
+        for method, extra in methods:
+            request = dict(schema_version=1, method=method, stays=[], as_of="2024-03-31",
+                           history_complete=True, scope="COUNTABLE_SHORT_STAYS",
+                           legal_context=context, **extra)
+            output.append(dict(name=f"context_{index}_{method}", request=request,
+                               expected=serialize(dispatch(request))))
     return output
 
 

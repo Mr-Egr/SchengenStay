@@ -1,4 +1,5 @@
 import { integrationMessages } from './integration-i18n.js';
+import { contextMessages } from './context-i18n.js';
 export const messages = {
   en: {
     'nav.dashboard': 'Overview', 'nav.history': 'Travel history', 'nav.calculator': 'Calculator', 'nav.planner': 'Travel planner', 'nav.calendar': 'Calendar', 'nav.settings': 'Settings', 'nav.guide': 'How it works',
@@ -60,7 +61,7 @@ export const messages = {
   },
 };
 
-for (const language of ['en', 'ru']) Object.assign(messages[language], integrationMessages[language]);
+for (const language of ['en', 'ru']) Object.assign(messages[language], integrationMessages[language], contextMessages[language]);
 
 export function translator(language = 'en') {
   const dictionary = messages[language] ?? messages.en;

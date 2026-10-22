@@ -778,3 +778,78 @@ Initial runtime loading remains a pinned external asset dependency, with normal
 browser cache behavior only. Broader browser/physical-device/screen-reader testing,
 full offline support, live Commission calculator comparison and public release
 remain unclaimed. PROGRESS.md records only checks actually performed.
+
+## 18. Stage 6 context gates and limitations
+
+The user's Stage 6 authorization replaces the older roadmap integration-review
+scope. This stage adds context handling, not an immigration-law decision system.
+The Stage 1–3 models, validators, algorithms and signatures remain unchanged.
+Official sources, supported questions, audit findings and deliberately unsupported
+rules are recorded in [docs/LEGAL_CONTEXT.md](docs/LEGAL_CONTEXT.md).
+
+### Additive version 1 boundary
+
+Requests may include `legal_context: {kind, valid_from?, valid_until?}`.
+`schengenstay.context.ContextKind` defines the supported kind strings. Omitting
+this object retains legacy results and the existing explicit scope/completeness
+requirements. Supplying null, a missing kind or `UNKNOWN` blocks unknown context;
+unknown kind strings, extra fields and inconsistent date data are invalid.
+Only `SHORT_STAY_VISA` accepts optional date fields. That kind denotes a request
+for visa-conditions assessment, which remains unsupported, not every C-visa holder.
+The arithmetic-only selection never overrides an unsupported existing scope.
+
+`review_context(value) -> ContextReview` runs before arithmetic dispatch. Its
+blocking status is propagated through the existing `CalculationScope` gate, so
+none of the six entrypoints can generate reassuring snapshots or itinerary/search
+results for those contexts. Existing request/history/plan validation still runs;
+invalid input takes precedence. No days are reclassified, omitted or exempted.
+Unknown fields in trip/proposal objects now fail structural validation instead of
+being silently discarded. Existing documented valid version 1 inputs are unchanged.
+
+Only requests carrying the new object gain a `context_review` response property:
+`{status, kind, reason_codes, issues, visa_dates}`. A nullable auxiliary `status`
+means no context error was identified, **not** legal approval or a seventh domain
+status. Top-level results retain the six-status contract. History, itinerary and
+search outcomes remain in their existing separate fields. Context reasons use
+`ContextReason`, with English/Russian copy and unknown-code fallback text.
+
+`check_visa_dates(valid_from=None, valid_until=None) -> VisaDateCheck` accepts ISO
+strings and checks parsing and ordering only. Its fields are `status`,
+`reason_codes`, parsed `valid_from`/`valid_until` and existing `ValidationIssue`
+objects. Missing dates produce an auxiliary `INSUFFICIENT_DATA`; malformed or
+reversed dates produce `INVALID_INPUT`. Consistent dates have null status and
+`VISA_DATE_ORDER_ONLY`. The enclosing C-visa assessment remains `OUT_OF_SCOPE`.
+No entry/duration/sticker-validity calculation, history-to-visa assignment or
+visa-aware planning algorithm is implemented.
+
+```python
+from schengenstay.context import check_visa_dates, review_context
+from schengenstay import ResultStatus
+
+dates = check_visa_dates("2024-02-29", "2024-02-29")
+assert dates.status is None  # Ordered dates, not a valid visa verdict.
+assert review_context({"kind": "RESIDENCE_PERMIT"}).status is ResultStatus.OUT_OF_SCOPE
+assert review_context({"kind": "UNKNOWN"}).status is ResultStatus.INSUFFICIENT_DATA
+```
+
+### Frontend and privacy
+
+`context-ui.js` adds optional request-context selection, specific explanations,
+and optional visa-date fields using the existing reusable date editor. It does
+not implement legal rules in JavaScript. `context-i18n.js` contains all new EN/RU
+copy. `pyodide-bridge.js` whitelists only kind/date values; Python remains
+authoritative. New inputs invalidate pending/results immediately without replacing
+the active editor. Language changes preserve drafts; no notes are interpreted.
+
+History mutations revoke completeness/countability and ongoing confirmations;
+the declared special context remains selected. Scenario edits do not change
+actual history or these declarations. Context, visa dates and drafts remain in
+memory even when history persistence is enabled. Existing storage schema and
+validation are unchanged, and reload requires fresh declarations.
+
+Context parsing and date checks are O(1) beyond the existing JSON size bound;
+strict record-field checks are O(n), within the 500-record limit. Blocked requests
+avoid occupancy scans. The deterministic archive includes the new Python module
+and is byte-checked on Windows and Ubuntu. Tests cover every context across all
+six methods, date-order properties, unchanged legacy outcomes, mixed histories,
+strict fields, UI blocking, draft privacy and real CPython/Pyodide parity.

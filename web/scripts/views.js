@@ -105,6 +105,8 @@ export function guide(ctx) {
   return [heading(ctx, 'guide'),
     h('div', { className: 'guide-grid' }, ['window', 'count', 'moves'].map((key, index) => h('article', { className: 'panel guide-card' }, h('span', { className: 'step-number' }, `0${index + 1}`), h('h2', {}, t(`guide.${key}`)), h('p', {}, t(`guide.${key}Body`))))),
     h('section', { className: 'guide-caution' }, icon('shield'), h('div', {}, h('h2', {}, t('guide.caution')), h('p', {}, t('guide.cautionBody')), h('p', {}, t('app.legal')))),
+    h('section', { className: 'panel' }, h('h2', {}, t('legal.guideTitle')), h('p', {}, t('legal.guideBody')),
+      h('p', {}, h('a', { href: 'https://www.netherlandsworldwide.nl/visa-the-netherlands/information-on-a-visa', target: '_blank', rel: 'noopener noreferrer', className: 'text-link' }, t('legal.stickerSource')))),
     h('p', {}, h('a', { href: 'https://home-affairs.ec.europa.eu/policies/schengen/border-crossing/short-stay-calculator_en', target: '_blank', rel: 'noopener noreferrer', className: 'text-link' }, t('guide.source'), icon('arrow')), h('small', { className: 'source-note' }, t('guide.sourceNote'))),
   ];
 }

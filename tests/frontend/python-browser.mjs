@@ -1,5 +1,6 @@
 // Optional browser checks: Playwright is test tooling, never a web dependency.
 import assert from 'node:assert/strict';
+import { contextChecks } from './context-browser.mjs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
@@ -83,6 +84,9 @@ try {
     await go('history'); await page.getByRole('button', { name: /^Edit:/ }).click();
     await page.locator('#field-exit').fill('2024-03-31'); await page.locator('dialog button[type="submit"]').click();
     await go('calculator'); assert.equal(await page.locator('[data-result-status]').count(), 0);
+    assert.equal(await page.locator('#field-complete').isChecked(), false);
+    assert.equal(await page.locator('#field-scope').inputValue(), 'UNKNOWN');
+    await run('INSUFFICIENT_DATA'); await confirm();
     await run('VIOLATION');
     assert.equal(await page.locator('.metric.used .metric-value').innerText(), String(expected('ninety_one').snapshot.used_days));
     assert.match(await page.locator('[data-value="first_violation_date"]').first().innerText(), /31 Mar 2024/);
@@ -114,6 +118,7 @@ try {
     // Return to 90 recorded days for the published-boundary-derived example.
     await page.getByRole('button', { name: /^Edit:/ }).click(); await page.locator('#field-exit').fill('2024-03-30'); await page.locator('dialog button[type="submit"]').click();
     const maximum = await scenario('maximum', '2024-06-29', '', '91', 'Proven maximum');
+    await confirm();
     await maximum.getByRole('button', { name: 'Evaluate scenario' }).click();
     await maximum.locator('[data-value="consecutive_days"]').waitFor();
     assert.equal(await maximum.locator('[data-value="consecutive_days"]').innerText(), String(expected('maximum_91').consecutive_days));
@@ -157,7 +162,7 @@ try {
   await check('ongoing input requires explicit assumptions and blocks future planning', async () => {
     await addTrip('2024-03-15', null, 'Ongoing record', 'ongoing');
     await go('calculator'); await run('INSUFFICIENT_DATA');
-    await page.locator('#field-ongoing').check(); await run('WITHIN_RULE');
+    await confirm(); await page.locator('#field-ongoing').check(); await run('WITHIN_RULE');
     assert.match(await page.locator('main').innerText(), /Ongoing presence/);
     const future = await scenario('fixed', '2025-01-01', '2025-01-02', '365', 'Ongoing blocks plan');
     await future.getByRole('button', { name: 'Evaluate scenario' }).click(); await future.locator('[data-reason="ONGOING_EXIT_REQUIRED"]').waitFor();
@@ -246,6 +251,7 @@ try {
       assert.equal(new URL(item.url).search, '');
     }
   });
+  await contextChecks({ browser, origin, check });
   console.log(`${checks} Python/browser integration checks and ${cases.length} full-result parity cases passed in Chrome ${browser.version()}.`);
 } finally {
   await browser?.close();

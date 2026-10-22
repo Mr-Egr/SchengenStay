@@ -3,7 +3,7 @@
 A travel-planning project with a tested Python day-count engine and a responsive
 web interface for organizing Schengen trips.
 
-**Current status: Stage 5 — Python/browser integration implemented.**
+**Current status: Stage 6 — scope and legal-context safeguards implemented.**
 The calculator and planner run the real Python package locally through Pyodide.
 There is no deployed application.
 
@@ -32,6 +32,8 @@ SchengenStay makes those day counts reproducible through a tested Python library
   calendar views, and light/dark themes. History saving is local and opt-in.
 - Background Python calculations, explicit scope/completeness confirmations,
   translated explanations, and recoverable loading errors.
+- Specific blocking results for uncertain or unsupported visa/residence contexts;
+  optional visa-date consistency checks, without visa adjudication.
 
 The engine operates on dates already identified as countable short stays. Its
 remaining-day figure is a snapshot, not a promise of additional continuous travel.
@@ -81,6 +83,7 @@ archive with `python scripts/build_browser.py`.
 
 - [Product requirements](PRODUCT.md) — intended users, scope, and V1 goals.
 - [Calculation rules](CALCULATION_RULES.md) — date semantics and unsupported cases.
+- [Context and limitations](docs/LEGAL_CONTEXT.md) — supported questions and official sources.
 - [Architecture and API](ARCHITECTURE.md) — current engine details and planned design.
 - [Contributing](CONTRIBUTING.md) — setup, checks, dependencies, and project layout.
 - [Progress record](PROGRESS.md) — completed work, verification, and open issues.

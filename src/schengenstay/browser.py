@@ -20,6 +20,7 @@ from schengenstay import (
     max_continuous_stay,
     usage_on,
 )
+from schengenstay.context import review_context
 from schengenstay.dates import parse_iso_date
 from schengenstay.validation import IssueCode, ValidationIssue
 
@@ -69,6 +70,8 @@ def _history(value):
     for item in value:
         if not isinstance(item, dict):
             result.append(item)
+        elif item.keys() - {"kind", "id", "entry", "exit", "note"}:
+            result.append(item)  # Do not drop unrecognized legal/countability metadata.
         elif item.get("kind") == "completed":
             result.append(ShortStay(item.get("id"), _day(item.get("entry")),
                                     _day(item.get("exit")), item.get("note", "")))
@@ -83,7 +86,7 @@ def _history(value):
 
 
 def _plan(value):
-    if isinstance(value, dict):
+    if isinstance(value, dict) and not value.keys() - {"entry", "exit"}:
         return PlannedStay(_day(value.get("entry")), _day(value.get("exit")))
     return value
 
@@ -95,7 +98,7 @@ def _invalid(field="request"):
     )
 
 
-def dispatch(request):
+def _dispatch_arithmetic(request):
     """Convert a versioned request and call exactly the existing public APIs.
 
     Missing scope/completeness never inherits the Python APIs' affirmative defaults.
@@ -109,7 +112,7 @@ def dispatch(request):
         return _invalid("schema_version_or_method")
     allowed = {"schema_version", "method", "stays", "as_of", "scope", "history_complete",
                "ongoing_confirmed", "max_inspected_days", "plan", "arrival", "horizon_days",
-               "length_days", "search_start", "scenarios"}
+               "length_days", "search_start", "scenarios", "legal_context"}
     if request.keys() - allowed:
         return _invalid()
     scope = request.get("scope")
@@ -156,6 +159,34 @@ def dispatch(request):
     if isinstance(scenarios, list) and len(scenarios) <= 100:
         scenarios = [_plan(item) for item in scenarios]
     return compare_scenarios(stays, scenarios, **options)
+
+
+def dispatch(request):
+    """Add optional context gates without changing legacy arithmetic API results.
+
+    A blocking context is passed through the existing scope gate before any
+    arithmetic runs. Malformed history/plans still retain validation precedence.
+    No record is automatically reclassified or excluded from counting.
+    """
+    if not isinstance(request, dict) or "legal_context" not in request:
+        return _dispatch_arithmetic(request)
+    review = review_context(request["legal_context"])
+    gated = dict(request)
+    if review.status is not None and request.get("scope") in (
+        None, "UNKNOWN", "COUNTABLE_SHORT_STAYS",
+    ):
+        gated["scope"] = ("SPECIAL_LEGAL_CONTEXT"
+                          if review.status is ResultStatus.OUT_OF_SCOPE else "UNKNOWN")
+    result = serialize(_dispatch_arithmetic(gated))
+    if review.status is ResultStatus.INVALID_INPUT:
+        result["status"] = "INVALID_INPUT"
+    if review.status is not None:
+        result["reason_codes"] = list(dict.fromkeys([
+            *result.get("reason_codes", []), *serialize(review.reason_codes),
+        ]))
+        result["issues"] = [*result.get("issues", []), *serialize(review.issues)]
+    result["context_review"] = serialize(review)
+    return result
 
 
 def handle_json(payload: str) -> str:

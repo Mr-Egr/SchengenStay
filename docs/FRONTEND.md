@@ -26,6 +26,11 @@ not `file://`. No npm install or frontend build system is needed to use the site
 4. Run a history check, evaluate an individual scenario, or compare fixed-date
    alternatives. Editing dates, records, bounds or declarations clears old results;
    run the relevant check again. Language/theme changes preserve valid results.
+5. After adding, editing or removing history, confirm completeness/countability
+   again. Optional **Scope and visa context** choices distinguish uncertain and
+   unsupported situations; they never override an existing scope block. Optional
+   C-visa date entry checks format/order only, never visa validity or trip rights.
+   Details and official sources: [context boundaries](LEGAL_CONTEXT.md).
 
 Initial Python loading downloads runtime assets from the pinned jsDelivr path.
 Trips are not transmitted with those downloads. Calculation starts on the first
@@ -158,7 +163,8 @@ app's saved key, preserves other sites' data, and keeps current in-memory entrie
 until reload/closure. Corrupt/blocked storage, quota failures and failed deletion
 are surfaced explicitly. If browser permissions block deletion, clear this site's
 data in browser settings. Browser cleanup can erase saved history. JSON
-import/export remains deferred to separately authorized Stage 7.
+import/export remains deferred to separate authorization. Context choices and
+visa dates are never saved, even with consent enabled.
 
 ## Checks
 

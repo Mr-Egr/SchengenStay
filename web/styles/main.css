@@ -173,6 +173,11 @@ main { max-width: 1440px; margin: auto; padding: 35px 38px 20px; }
 .field label { font-weight: 600; font-size: .8rem; }
 input, select, textarea { min-width: 0; width: 100%; min-height: 45px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
 .date-field { --date-focus: #285844; --date-selection: #dcebcf; --date-selection-text: #173e2d; }
+.legal-context { border-block: 1px solid var(--line); padding-block: 16px; margin-block: 12px; }
+.legal-context h3 { font-size: .95rem; margin-bottom: 12px; }
+.legal-notice, .context-review { border-left: 3px solid var(--primary); background: var(--surface-soft); padding: 12px 16px; border-radius: 6px; }
+.context-review { margin-block: 14px; font-size: .85rem; }
+.context-review ul { padding-left: 20px; }
 :root[data-theme='dark'] .date-field { --date-focus: #bfdbac; --date-selection: #476842; --date-selection-text: #f4f9ef; }
 .date-entry { display: flex; align-items: stretch; gap: 6px; }
 .date-entry > input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }

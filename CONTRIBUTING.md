@@ -148,5 +148,11 @@ the source. Live calculator comparison, broader reference coverage, cross-browse
 device review, and release gates remain open. No license has been selected; choose one before public
 distribution rather than assuming licensing terms on the owner's behalf.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 5 stops for review;
+See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 6 stops for review;
 subsequent stages require separate authorization.
+
+Legal-context work must follow [the reviewed source scope](docs/LEGAL_CONTEXT.md).
+Do not infer countability from notes, classify mixed permit/short-stay periods,
+or interpret a chronological visa-date pair as legal validity. Context details
+are not persisted. Update context tests, real browser parity cases and the
+deterministic Python archive for any boundary changes.
