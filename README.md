@@ -1,10 +1,11 @@
 # SchengenStay
 
-A Python project for understanding Schengen short-stay day counts, with a travel
-planning web application planned for later development.
+A travel-planning project with a tested Python day-count engine and a responsive
+web interface for organizing Schengen trips.
 
-**Current status: Stage 3 — pure-Python travel planner implemented.**
-There is no web interface or deployed application yet.
+**Current status: Stage 4 — frontend preview implemented.**
+The Python engine works independently; browser calculations are not connected yet.
+There is no deployed application.
 
 ## The problem
 
@@ -27,22 +28,25 @@ SchengenStay makes those day counts reproducible through a tested Python library
 - Explicit outcomes for invalid input, incomplete information, unsupported scope,
   and bounded inspections.
 - Unit and property-based tests, plus a GitHub Actions workflow for automated checks.
+- Responsive English/Russian interface with trip editing, tentative scenarios,
+  calendar views, and light/dark themes. Entries exist only in the current tab.
 
 The engine operates on dates already identified as countable short stays. Its
 remaining-day figure is a snapshot, not a promise of additional continuous travel.
 
 ## Planned
 
-- An English/Russian browser interface using Pyodide, optional local storage,
-  and static deployment.
+- Stage 5: connect the Python engine through Pyodide and add optional local storage.
+- Later: integration/release validation and static deployment.
 
 See the [roadmap](ROADMAP.md) for the staged implementation plan.
 
 ## Tech stack
 
 **Python 3.12+**, standard-library date arithmetic and immutable data models;
-**pytest**, **Hypothesis**, and **Ruff** for testing and linting; **GitHub Actions**
-for CI. The current engine has no third-party runtime dependencies or paid services.
+**HTML, CSS, and vanilla JavaScript ES modules**; **pytest**, **Hypothesis**, and
+**Ruff** for Python checks; Node's built-in frontend tests; **GitHub Actions** for CI.
+No frontend build step, third-party runtime dependencies, or paid services.
 
 ## Quick start
 
@@ -58,6 +62,15 @@ python -m venv .venv
 
 For macOS/Linux setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 For Python examples, see the [planner API](ARCHITECTURE.md#15-stage-3-travel-planner).
+
+Preview the interface locally:
+
+```powershell
+.\.venv\Scripts\python.exe -m http.server 8765 --bind 127.0.0.1 --directory web
+```
+
+Open [localhost:8765](http://127.0.0.1:8765). See the [frontend guide](docs/FRONTEND.md)
+for screenshots, checks, working features, and the Stage 5 integration boundary.
 
 ## Documentation
 

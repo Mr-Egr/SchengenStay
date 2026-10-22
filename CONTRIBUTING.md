@@ -1,10 +1,11 @@
 # Contributing
 
 Read the five supplied requirements documents and the Stage 1 decisions in ARCHITECTURE.md
-before making changes. Work on one authorized roadmap stage at a time. Stage 3
-adds bounded maximum-stay/earliest-entry searches and independent scenario
-comparison on the Stage 1/2 engine. UI, integration, and deployment remain
-outside this stage. See ARCHITECTURE.md sections 14-15 for the current contracts.
+before making changes. Work on one authorized roadmap stage at a time. Stage 4
+adds the frontend preview on top of the separate Stage 1–3 Python package.
+Pyodide integration and optional persistence are deferred to Stage 5. Do not add
+JavaScript calculation logic. See ARCHITECTURE.md sections 14–16 and the
+[frontend guide](docs/FRONTEND.md) for contracts, local preview, and browser checks.
 
 ## Local workflow
 
@@ -12,7 +13,8 @@ outside this stage. See ARCHITECTURE.md sections 14-15 for the current contracts
 2. Install the package and its development extra: `python -m pip install -e ".[dev]"`.
 3. Before changing a future algorithm, add tests for its intended behavior.
 4. Run `python -m pip check`, `python -m pytest -q`, and `ruff check .` with that
-   environment. Record actual commands and results in PROGRESS.md.
+   environment. Also run `node --test tests/frontend/state.test.mjs` with Node 22+
+   and `python scripts/check_docs.py`. Record actual results in PROGRESS.md.
 5. Summarize changed behavior, relevant tests, limitations, and the next stage.
    Stop at the authorized stage boundary.
 
@@ -39,8 +41,10 @@ add any discovered regression as a concrete unit test as well.
 - Do not add paid services, runtime dependencies without a concrete need,
   server storage, telemetry, or duplicate calculation logic in JavaScript.
 
-GitHub Actions uses the commands above on Python 3.12. A local pass does not prove
-that a remote workflow ran; report these separately. No deployment is configured.
+GitHub Actions uses the commands above on Python 3.12 and Node 22. Browser checks
+are separate optional local checks using Playwright; see the frontend guide.
+A local pass does not prove that a remote workflow ran; report these separately.
+No deployment is configured.
 
 
 ## Environment setup
@@ -132,5 +136,5 @@ the source. Live calculator comparison, broader reference coverage, browser test
 and release gates remain open. No license has been selected; choose one before public
 distribution rather than assuming licensing terms on the owner's behalf.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 3 stops for review;
-Stage 4 browser integration requires separate authorization.
+See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 4 stops for review;
+Stage 5 integration requires separate authorization.

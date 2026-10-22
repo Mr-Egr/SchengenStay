@@ -1,5 +1,106 @@
 # Progress record
 
+## 2026-10-23 — Stage 4 frontend interface
+
+Started from clean `main` and `origin/main` at `9e11198`. Read PRODUCT.md,
+ARCHITECTURE.md, CALCULATION_RULES.md, ROADMAP.md, and this record; inspected the
+actual Stage 1–3 models, validators, date helpers, public exports, compliance and
+planner contracts. The user's current instruction supersedes the earlier roadmap:
+Stage 4 is frontend only; Pyodide and optional persistence move to Stage 5.
+
+### Implemented interface and boundaries
+
+Built seven responsive screens: overview, travel history, calculator, travel
+planner, calendar, settings, and how-it-works guidance. Functional interactions
+include completed-trip and scenario add/edit/remove, confirmation/cancellation,
+basic input validation, inclusive overlap feedback, hash navigation, calendar
+month/date navigation, English/Russian localization, and light/dark themes.
+
+The workspace starts empty. The trip count reflects only entered records; used
+and remaining day values are dashes. Calculator controls explicitly explain that
+calculations are unavailable. Scenarios have independent “not evaluated” panels.
+Fixed-date proposals are marked tentatively in the calendar; maximum/earliest
+search requests do not imply travel dates. No fabricated calculations, JavaScript
+90/180 engine, Pyodide, backend, account, persistence, or deployment was added.
+The Python calculation package and all existing Python tests are unchanged.
+
+Records and preferences are memory-only; the UI explains that refresh/closure
+clears them. No travel data enters URLs, logs, browser storage, or network calls.
+The CSP blocks data connections and form submission. Text uses safe DOM text
+nodes. Dates, basic chronology, overlaps and bounded form fields are UI feedback,
+not legal-scope or compliance decisions. Loading/error calculation components are
+prepared and tested for Stage 5 without simulated runtime activity; real startup
+failure has an honest error/reload view.
+
+### New and changed files
+
+- Added `web/index.html`, `web/styles/main.css`, and original local SVG assets
+  `web/assets/mark.svg` and `web/assets/journey.svg`.
+- Added `web/scripts/bootstrap.js`, `app.js`, `views.js`, `components.js`,
+  `dom.js`, `store.js`, `dates.js`, and `i18n.js` for startup, routing, screens,
+  reusable controls, session records, calendar presentation, and localization.
+- Added `tests/frontend/state.test.mjs` and `tests/frontend/browser.mjs`, plus
+  a dependency-free `package.json` for ES modules and optional command shortcuts.
+- Added `scripts/check_docs.py`, `docs/FRONTEND.md`, and actual empty-state desktop
+  and mobile screenshots in `docs/images/`. Screenshots contain no personal data.
+- Updated README.md, ARCHITECTURE.md section 16, ROADMAP.md, CONTRIBUTING.md,
+  PROGRESS.md, `.gitignore`, and `.github/workflows/ci.yml`. CI now includes Node
+  unit/static checks and offline documentation checks alongside Python checks.
+
+### Verification actually performed
+
+Used the existing Python 3.12.14 environment, Node 24.19.0, bundled Playwright
+1.62.1 and installed Chrome 155.0.8059.85. No packages were installed and no runtime
+dependency was added. Browser checks used a temporary loopback-only static test
+server and closed the test browser/server afterward. The standalone initial
+sandbox preview could not be reached across the network boundary; the browser
+suite runs its test server and browser together with approved local access.
+
+Browser review found and fixed a view-composition syntax error, a dialog focus
+boundary, and skip-navigation behavior; an asynchronous native-dialog test needed
+an explicit dismissal wait. Added startup-failure handling, date-range feedback,
+an unknown-hash regression, and larger supporting text before final verification.
+Desktop and mobile screenshots were visually inspected after the final layout.
+
+| Command/check | Final local result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q` | All 267 existing tests passed in 7.81 seconds |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found |
+| `node --test tests/frontend/state.test.mjs` | 18 tests passed |
+| `node tests/frontend/browser.mjs` | 17 browser checks passed |
+| `.\.venv\Scripts\python.exe scripts/check_docs.py` | 25 local links/anchors and 3 executable Python examples passed |
+| `git diff --check` | No whitespace errors |
+| Remote before commit | `origin/main` remained `9e11198bb0f9848e501e72acacbaef212ce2e271` |
+
+Browser checks include CRUD, form errors, text safety, independent scenarios,
+no computed counts, unavailable/empty states, calendar markers and keyboard
+selection, language/themes, delete cancellation, dialog focus and Escape, startup
+failure, zero browser storage/cookies, and absence of remote data requests or
+browser errors. All seven screens fit at 1440, 768, 390, and 320 pixels in both
+languages. Named controls/landmarks and key text contrast pairs were checked in
+both themes. Reduced-motion CSS is included. This is not a full accessibility
+audit, screen-reader certification, or real mobile-device verification.
+
+Rechecked the Commission's official calculator guidance page for the plain-language
+rule explanation/link. Did not run the live calculator or claim additional engine
+parity. Existing published-fixture tests remain unchanged and pass.
+
+### Remaining limitations and Stage 5
+
+This is a frontend preview, not an operational browser calculator. Data and
+preferences disappear on refresh. Ongoing-stay input is not supported in this UI.
+Chrome was exercised; Firefox, Safari, physical devices, and screen readers still
+need review. Native date-input formatting follows browser/OS locale. The optional
+Playwright browser suite is not installed or run by CI; local passes do not prove
+remote CI success. Licensing and full dependency locking remain earlier decisions.
+
+Stage 5 needs the pinned Pyodide/worker bridge, explicit scope/completeness and
+as-of inputs, Python validation, all six result statuses with separate history and
+planning evidence, stale-response protection, bounded work, real loading/error
+handling, consent-based persistence, and browser/Python parity tests. Detailed
+handoff is in docs/FRONTEND.md. Stop after the single Stage 4 commit/push for review.
+
 ## 2026-10-22 — Stage 3 travel planner
 
 Started from clean `main` and `origin/main` at `f53156b`. Read the product, rules,

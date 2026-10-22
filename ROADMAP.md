@@ -2,6 +2,11 @@
 
 **Policy:** work sequentially, do not invent milestones measured in days; prioritize verified correctness over speed. Each stage ends with passing tests and a clear summary before proceeding. No paid infrastructure; use a static site with real Python calculation code running client-side.
 
+**Scope update, 2026-10-23:** the user's Stage 4 instruction supersedes the
+original stage order. Stage 4 builds the frontend only. Pyodide integration and
+optional local persistence move to Stage 5. A polished preview must not imply
+that browser calculations already work.
+
 ## Stage 0 — Repo and contract
 
 **Tasks:** initialize repo + `pyproject.toml`, lint/test tooling, read all four specification docs, establish agreed statuses, supported scope, contributor docs, CI. Write the initial design decisions in README.
@@ -29,30 +34,45 @@
 **Implemented scope:** maximum-stay and earliest-entry searches, with bounded
 inspection work and structured results. The user's Stage 3 request also brings
 pure-Python comparison of independent hypothetical trips forward from Stage 9;
-comparison UI and saved scenarios remain deferred. See ARCHITECTURE.md section 15
+comparison UI followed in Stage 4, while persistence remains deferred. See ARCHITECTURE.md section 15
 and PROGRESS.md for exact contracts and verification results.
 
-## Stage 4 — Browser + Python bridge
+## Stage 4 — Frontend interface preview
 
-**Tasks:** pin Pyodide version; load locally packaged pure Python core in browser; implement fixed JSON API; error/loading states; no user code execution. Use Web Worker if supported and stable.
+**Tasks:** responsive HTML/CSS/vanilla JavaScript interface with overview, history,
+calculator, planner, calendar, settings, and explanation screens. Functional
+in-memory trip/scenario CRUD, basic validation, English/Russian text, light/dark
+themes, accessible controls, honest empty/unavailable states, and frontend tests.
+No Pyodide, duplicate JavaScript calculation engine, persistence, backend, or deployment.
 
-**Done when:** representative check request in browser yields same structured result as `pytest` reference; unsupported schema is rejected.
+**Done when:** forms/navigation work on desktop and small screens, actual and
+tentative dates remain separate, no computed results are fabricated, Python and
+frontend checks pass, and local preview instructions and limitations are documented.
 
-## Stage 5 — History and dashboard UI
+## Stage 5 — Python integration and opt-in local persistence
 
-**Tasks:** responsive shell with English/Russian toggle; trip add/edit/delete/sort; overlap warnings; dashboard results and readable 180-day explanation; accessible date inputs.
+**Tasks:** pin Pyodide; load the Python package through a versioned JSON bridge,
+preferably in a worker; collect explicit scope/completeness and check-date inputs;
+connect real calculations to all screens. Preserve six-status semantics, historical
+findings, partial-search explanations, and legal limitations. Add bounded runtime
+requests, loading/error handling, and consent-based, validated local persistence.
 
-**Done when:** desktop and mobile flows work, negative cases handled, no calculated result is shown when history is invalid/unsupported.
+**Done when:** browser/Python fixtures match, unsupported input cannot appear
+affirmative, stale results are discarded after edits, storage is opt-in and
+clearable, and reload/privacy/integration tests pass. Requires separate authorization.
 
-## Stage 6 — Planner and calendar UI
+## Stage 6 — Planner and calendar integration review
 
-**Tasks:** plan forms, validation, violation explanations, maximum-day/earliest-entry search, month calendar with textual legend, planned vs confirmed separation.
+**Tasks:** review the already-built forms/calendar against real Python responses;
+refine violation explanations, maximum/earliest search bounds, keyboard use, and
+planned-versus-confirmed separation using integration and accessibility evidence.
 
 **Done when:** test plan can be created, modified and deleted without changing actual history; results match Python API, keyboard navigation works.
 
-## Stage 7 — Local persistence and privacy
+## Stage 7 — Persistence and privacy review
 
-**Tasks:** consent for local saving; strict versioned JSON import/export; delete all; size/count constraints; privacy/limitations page.
+**Tasks:** review Stage 5 consent/local storage, add strict versioned JSON import/export
+if separately authorized, verify delete-all and size/count limits, and audit privacy copy.
 
 **Done when:** export->clear->import roundtrip is accurate, bad files rejected, no history transmitted to remote servers.
 

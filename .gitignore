@@ -20,6 +20,9 @@ __pycache__/
 .tox/
 .nox/
 .cache/
+node_modules/
+test-results/
+playwright-report/
 .ipynb_checkpoints/
 
 # Build and packaging outputs

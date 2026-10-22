@@ -4,8 +4,9 @@
 > are not implemented yet. The implemented date engine is documented in
 > [section 13](#13-implemented-stage-1-engine), and the Stage 2 compliance contract
 > in [section 14](#14-stage-2-compliance-contract). Stage 3 planning is documented
-> in [section 15](#15-stage-3-travel-planner). Browser integration and deployment
-> remain planned work.
+> in [section 15](#15-stage-3-travel-planner). The frontend preview is documented in
+> [section 16](#16-stage-4-frontend-preview). Python/browser integration and
+> persistence move to Stage 5 under the user's revised order; deployment is deferred.
 
 ## 1. Architectural goals
 
@@ -167,7 +168,8 @@ with [README_START_HERE.md](README_START_HERE.md).
 1. **Stage boundary:** Stage 1 adds date models/helpers, validation, normalized
    intervals, and `usage_on()`. Stage 2 adds `check_history()` and fixed-itinerary
    `check_plan()` with first-violation reporting (section 14). Stage 3 adds bounded
-   searches and independent scenario comparison (section 15). Browser work is deferred.
+   searches and independent scenario comparison (section 15). Stage 4 supplies a
+   frontend preview only (section 16); the browser does not yet run calculations.
 2. **Canonical status vocabulary:** `CALCULATION_RULES.md` section 7 is the public
    result contract. PRODUCT.md also uses `VALID_FOR_RULE` and
    `WITHIN_90_180_RULE`; these are not additional API statuses. The supported
@@ -568,3 +570,63 @@ assert len(history) == 1  # Hypothetical travel was not added to actual history.
 All outputs remain informational arithmetic. No result grants permission to enter
 or stay. No visa/nationality/residence adjudication, browser, Pyodide integration,
 persistence, or deployment is implemented in Stage 3.
+
+## 16. Stage 4 frontend preview
+
+The user's 2026-10-23 instruction supersedes the original stage order: Stage 4 is
+frontend only; Stage 5 will connect Python through Pyodide and add optional local
+persistence. The existing Python package, domain contracts, and tests are unchanged.
+See [the frontend guide](docs/FRONTEND.md) for setup, module/file details, actual
+screenshots, checks, and the precise integration checklist.
+
+The browser uses HTML5, modern CSS, and vanilla JavaScript ES modules. All fonts
+are system fonts and all assets are local original SVGs. There is no framework,
+bundler, runtime dependency, API, server application, or paid service. A loopback
+static HTTP server is needed only to preview ES modules locally.
+
+`app.js` composes seven hash-routed views with reusable components, a temporary
+store, localized strings, and calendar presentation helpers. The store keeps
+immutable completed-trip and hypothetical-scenario records in separate arrays;
+editing a scenario cannot alter actual history. Generated IDs are session-local.
+Labels/notes are displayed as text nodes, never interpolated HTML or code. No
+trip information is written to URLs, browser storage, cookies, logs, or a server.
+Reload clears all data and preferences; the UI explains this visibly.
+
+The overview displays only the actual number of entered records. Day-used and
+day-remaining cards show dashes. The calculator accepts a selected date but its
+calculation control is explicitly unavailable. Fixed-date, maximum-stay, and
+earliest-entry forms retain independent requests with “not evaluated” panels;
+they do not generate exit dates or verdicts. Calendar colors and shapes mark
+entered historical/fixed-tentative intervals only. Requests for a search do not
+imply calendar occupancy. JavaScript date work is restricted to input feedback,
+month navigation, date formatting, and marking user-entered intervals.
+
+Browser presentation states (`empty`, `unavailable`, `loading`, `error`) are not
+new Python domain statuses. Loading/error calculation components are reserved
+and tested for Stage 5, without fake runtime delays or result fixtures. A real
+module-import failure instead displays an honest startup error and reload action.
+There is no transport adapter returning pretend `WITHIN_RULE` results.
+
+Accessibility includes semantic landmarks/headings, skip navigation, current-page
+indicators, named fields and errors, live announcements, focus restoration,
+keyboard-contained native dialogs, Escape cancellation, arrow-key calendar date
+navigation, non-color markers, visible focus, and reduced-motion styling. English
+and Russian dictionaries have matching keys. `Intl.DateTimeFormat` formats ISO
+dates in UTC to preserve their day; browser-native input formatting follows the
+OS/browser. Light/dark and language selections are memory-only preferences.
+
+Node's built-in unit tests check data/state/date/localization boundaries, import
+syntax, local assets, and absence of browser network/storage or duplicate engine
+calls. A separate optional Playwright suite exercises the actual interface and
+responsive/accessibility basics. It starts its own temporary loopback static
+server; it is development tooling, not an application backend. CI adds Node 22
+unit/static checks and an offline Markdown-link/API-example check. No browser CI
+or deployment success is implied by passing local checks.
+
+Stage 5 must introduce explicit user declarations for countability/completeness,
+an explicit `as_of`, Python validation at the bridge boundary, all six domain
+statuses, independent past/future results, reason/window evidence, and bounded
+search outcomes. UI-only labels remain metadata; notes must never determine
+legal scope. Persistent storage requires informed consent and its own versioned
+schema/validation. Source notes and pending official/live-calculator comparisons
+remain unchanged. The frontend is informational and cannot grant travel permission.
