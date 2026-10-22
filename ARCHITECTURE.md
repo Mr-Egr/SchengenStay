@@ -1,5 +1,10 @@
 # SchengenStay — Technical Architecture
 
+> Sections 1-12 describe the planned V1 architecture, including features that
+> are not implemented yet. For the current Stage 1 contract, API, and limits,
+> see [section 13](#13-implemented-stage-1-engine). The browser interface,
+> planning algorithms, and deployment remain planned work.
+
 ## 1. Architectural goals
 
 Build a **genuinely Python-based** product whose date rules are unit-testable in CPython and reusable in the browser, without a paid backend or account system. Avoid introducing frameworks and infrastructure unrelated to the core problem.
@@ -146,3 +151,104 @@ schengenstay/
 4. No user travel data is sent to backend or logs.
 5. Deploy publicly; independently verify URL and rerun smoke tests.
 6. Publish limitations and sources and remove unfinished features from marketing copy.
+
+
+## 13. Implemented Stage 1 engine
+
+### Design decisions and result vocabulary
+
+The supplied requirements remain in the repository root. Read
+[PRODUCT.md](PRODUCT.md), [ARCHITECTURE.md](ARCHITECTURE.md),
+[CALCULATION_RULES.md](CALCULATION_RULES.md), and [ROADMAP.md](ROADMAP.md), starting
+with [README_START_HERE.md](README_START_HERE.md).
+
+1. **Stage boundary:** Stage 1 adds date models/helpers, validation, normalized
+   intervals, and `usage_on()`. `check_history()`, compliance verdicts,
+   first-violation reporting, planning, and all browser work remain deferred.
+2. **Canonical status vocabulary:** `CALCULATION_RULES.md` section 7 is the public
+   result contract. PRODUCT.md also uses `VALID_FOR_RULE` and
+   `WITHIN_90_180_RULE`; these are not additional API statuses. The supported
+   success code is `WITHIN_RULE`. No status means travel is authorized.
+3. **Bounded searches:** the roadmap/rules mention `NOT_FOUND_WITHIN_HORIZON`.
+   Treat that as a future reason for `HORIZON_LIMIT`, not a seventh top-level
+   status. No search behavior is implemented.
+4. **Scope:** inputs must already represent countable short stays. Country
+   labels are descriptive metadata only. Historical membership inference,
+   residence permits, D visas, pending applications, national extensions, bilateral
+   arrangements, and visa-sticker adjudication are unsupported. Ambiguous legal
+   grounds must not yield an affirmative arithmetic verdict.
+5. **Arithmetic:** use `datetime.date`, inclusive entry/exit dates, and
+   `[day - 179 days, day]`. Snapshot remaining days are not a promise of a future
+   continuous stay. Flag overlaps while ensuring low-level arithmetic never
+   double-counts dates. Checking every proposed day and reporting past violations
+   separately belong to Stage 2.
+6. **Architecture:** calculations use pure Python with no network or
+   clock-dependent behavior. Later stages will add static HTML/CSS/vanilla JS and
+   pinned Pyodide. No backend, database, accounts, telemetry, or paid APIs.
+7. **Data and privacy:** later persistence will require informed choice and stay
+   on the device; planned travel remains separate from actual travel. JSON import
+   limits and schema validation belong to later implementation stages.
+
+| Status | Intended meaning once calculation features exist |
+| --- | --- |
+| `WITHIN_RULE` | Supported itinerary satisfies the arithmetic being evaluated |
+| `VIOLATION` | Evaluated rolling-day count exceeds the rule |
+| `INVALID_INPUT` | Malformed or inconsistent input |
+| `INSUFFICIENT_DATA` | Required information is missing |
+| `OUT_OF_SCOPE` | Requested legal context or scenario is unsupported |
+| `HORIZON_LIMIT` | A bounded computation reached its search limit |
+
+The enum reserves compliance-result names for Stage 2. Stage 1 `UsageResult`
+contains numbers, dates, scope notes, and any ongoing-stay assumption, but no
+compliance status. Future status precedence and planning limits remain undecided.
+
+### Current Python API and computation limits
+
+```python
+from datetime import date
+from schengenstay import ShortStay, usage_on, validate_history
+
+stays = [ShortStay("trip-1", date(2024, 2, 28), date(2024, 3, 1))]
+assert validate_history(stays) == []
+result = usage_on(stays, date(2024, 3, 1))
+assert result.used_days == 3
+assert result.remaining_arithmetic_days == 87
+```
+
+- `ShortStay(id, entry, exit, note="")` and `OngoingStay(id, entry)` are frozen
+  records. Construction preserves supplied fields; `validate_history()` reports
+  malformed dates, IDs, notes, reversed ranges, duplicate IDs, and overlaps.
+- `validate_history(stays, *, as_of=None)` returns `ValidationIssue` objects with
+  a stable `IssueCode`, field path, translation key, severity, and optional related
+  field. It accepts at most **500 records** in a sequence. Unsorted records are
+  valid. Shared exit/entry dates overlap because both boundaries count; successive
+  calendar-day records are valid. For each conflicting record it reports one
+  earlier overlapping record, rather than enumerating every overlapping pair.
+- `usage_on(stays, day)` validates the entire history, including future records,
+  and raises `HistoryValidationError` with `.issues` on invalid input. It never
+  returns a partial count for invalid history. Valid recorded dates after `day`
+  do not contribute. Remaining arithmetic is `max(0, 90 - used_days)`.
+- Ongoing records require an explicit `as_of` for validation. In `usage_on`, the
+  required `day` supplies that date. Presence is assumed through that date and the
+  IDs are reported in `result.assumed_ongoing_ids`; the record gets no invented
+  exit date. An ongoing entry after the check date is rejected.
+- `schengenstay.dates` provides strict ASCII `parse_iso_date()`, immutable
+  `DateInterval`, `inclusive_length()`, `rolling_window()`,
+  `normalize_intervals()`, and `count_occupied_days()`. Low-level normalization
+  merges overlapping/adjacent intervals and deduplicates coverage; it must not be
+  used to silently resolve invalid user history. Helpers accept finite sequences
+  or iterables of validated intervals; the 500-record limit applies to history APIs.
+- Date endpoints span `0001-01-01` through `9999-12-31`. Check dates start at
+  `0001-06-29`, the earliest date with a full representable 180-day window. Earlier
+  dates raise `ValueError` instead of truncating the window. These are computational
+  bounds, not a claim that historical legal rules are supported.
+- Strings must be explicitly parsed. `datetime` timestamps and other date
+  subclasses are rejected; no timezone conversion or current clock is used.
+  Invalid helper/check-date types raise `TypeError`; invalid date text, reversed
+  intervals, and unrepresentable windows raise `ValueError`.
+
+Counting clips intervals to the window, sorts and merges coverage, and sums
+inclusive lengths: O(n log n) time and O(n) memory for n intervals. It never
+expands a multi-year stay into millions of dates. Hypothesis tests compare this
+with a separate enumerating oracle, including overlaps, input permutations,
+normalization, and calendar boundaries.

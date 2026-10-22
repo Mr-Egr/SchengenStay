@@ -1,5 +1,29 @@
 # Progress record
 
+## 2026-10-22 — Project overview documentation
+
+Rewrote README.md as a concise English project overview for recruiters and
+contributors. It explains the problem, implemented engine features, planned
+compliance/planning/browser work, stack, current status, quick setup, and legal
+scope without implying that a web application or travel planner already exists.
+
+Moved the complete design decisions, reserved result vocabulary, Python usage
+example, API contract, date/input limits, error behavior, and algorithm notes into
+ARCHITECTURE.md, section 13. Marked sections 1-12 as the planned V1 architecture.
+Moved full platform setup, dependency/CI notes, file map, test scope, official
+reference limitations, and licensing caveat into CONTRIBUTING.md. Updated its
+cross-references. Application logic, tests, dependencies, and CI are unchanged.
+
+Verification:
+
+| Command/check | Result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q` | 116 passed in 2.87 seconds |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found |
+| Documentation review | Local links/anchors resolve; detailed README sections preserved in their new locations |
+| `git diff --check` | No whitespace errors |
+
 ## 2026-10-22 — Integrating the GitHub initial history
 
 Configured `origin` as `https://github.com/Mr-Egr/SchengenStay` and inspected both
