@@ -172,7 +172,39 @@ main { max-width: 1440px; margin: auto; padding: 35px 38px 20px; }
 .field { min-width: 0; display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
 .field label { font-weight: 600; font-size: .8rem; }
 input, select, textarea { min-width: 0; width: 100%; min-height: 45px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
-input[type='date'] { min-width: 0; max-width: 100%; }
+.date-field { --date-focus: #285844; --date-selection: #dcebcf; --date-selection-text: #173e2d; }
+:root[data-theme='dark'] .date-field { --date-focus: #bfdbac; --date-selection: #476842; --date-selection-text: #f4f9ef; }
+.date-entry { display: flex; align-items: stretch; gap: 6px; }
+.date-entry > input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }
+.date-field input::selection { background: var(--date-selection); color: var(--date-selection-text); }
+.date-field :is(input, select, button):focus-visible { outline: 2px solid var(--date-focus); outline-offset: 3px; }
+.date-entry input:focus { border-color: var(--date-focus); }
+.date-field input[aria-invalid='true'] { border-color: var(--danger); }
+.date-field .date-toggle, .date-field .date-close, .date-field .date-nav { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); color: var(--primary); }
+.date-toggle[aria-expanded='true'] { background: var(--sage); border-color: var(--primary); }
+.date-picker { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 6px 22px #173e2d12; margin-top: 6px; }
+.date-picker[hidden] { display: none; }
+.date-picker-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.date-picker-heading strong { font-size: .9rem; }
+.date-picker-controls { display: grid; grid-template-columns: 44px minmax(0, 1fr) 70px 44px; gap: 6px; align-items: center; }
+.date-picker-controls input, .date-picker-controls select { font-size: .85rem; padding: 6px; }
+.date-grid { border-collapse: separate; border-spacing: 2px; table-layout: fixed; width: 100%; margin-block: 10px; }
+.date-grid th { color: var(--muted); font-size: .72rem; font-weight: 500; padding-block: 5px; }
+.date-grid td { padding: 0; }
+.date-day { width: 100%; min-width: 0; min-height: 44px; padding: 0; border: 1px solid transparent; border-radius: 7px; background: var(--surface); color: var(--text); font-size: .85rem; }
+.date-day:hover:not(:disabled) { background: var(--sage); }
+.date-grid [aria-selected='true'] .date-day { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.date-day[aria-current='date'] { border-color: var(--primary); }
+.date-picker-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.date-picker-actions .button { min-height: 44px; }
+@media (max-width: 560px) {
+  .date-picker { padding: 8px; margin-inline: -8px; }
+  .date-picker-controls { grid-template-columns: 44px minmax(0, 1fr) 60px 44px; gap: 4px; }
+}
+@media (forced-colors: active) {
+  .date-field :is(input, select, button):focus-visible { outline-color: Highlight; }
+  .date-grid [aria-selected='true'] .date-day { border: 3px solid Highlight; }
+}
 textarea { resize: vertical; min-height: 85px; }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: var(--danger); }

@@ -1,16 +1,18 @@
+import { createDateDraft, validateDateFields } from './date-input.js';
 import { PythonBridge, LatestResults, calculationRequest } from './pyodide-bridge.js';
 import { createPersistence } from './storage.js';
 import { h, icon, button, announce } from './dom.js';
 import { createStore } from './store.js';
 import { todayISO } from './dates.js';
 import { translator } from './i18n.js';
-import { confirmRemoval, openEditor } from './components.js';
+import { confirmRemoval, openEditor, metrics, computationState, calendar } from './components.js';
 import * as views from './views.js';
 
 const today = todayISO();
 const persistence = createPersistence();
 const restored = persistence.load(today);
 const state = { language: restored.data?.language ?? 'en', theme: restored.data?.theme ?? 'light', month: today.slice(0, 7), selectedDay: today, checkDate: today, complete: false, scope: 'UNKNOWN', ongoing: false, budget: 10000, runtime: 'idle', runtimeError: null, storageError: restored.error ?? null };
+state.checkDateDraft = createDateDraft(today, state.language);
 const savedTrips = [...(restored.data?.trips ?? [])];
 let restoringId;
 const store = createStore({ planningDate: () => state.checkDate, makeId: () => restoringId ?? crypto.randomUUID() });
@@ -29,17 +31,21 @@ function publish(key) {
     announce(['WITHIN_RULE', 'VIOLATION', 'INVALID_INPUT', 'INSUFFICIENT_DATA', 'OUT_OF_SCOPE', 'HORIZON_LIMIT'].includes(status) ? t(`status.${status}`) : t('result.unknown'));
   } else if (value?.state === 'error') announce(t('state.error.title'));
 }
+function validDate() { return validateDateFields(document.querySelector('main')); }
 function runHistory() {
+  if (!validDate()) return;
   results.run('usage', () => request('usage_on'), render);
   results.run('history', () => request('check_history'), () => publish('history'));
 }
 function runScenario(item) {
+  if (!validDate()) return;
   const method = { fixed: 'check_plan', maximum: 'max_continuous_stay', earliest: 'find_earliest_entry' }[item.mode];
   const extra = item.mode === 'fixed' ? { plan: { entry: item.entry, exit: item.exit } } : item.mode === 'maximum'
     ? { arrival: item.entry, horizon_days: item.horizon } : { search_start: item.entry, length_days: item.length, horizon_days: item.horizon };
   results.run(item.id, () => request(method, extra), () => publish(item.id));
 }
 function compareScenarios() {
+  if (!validDate()) return;
   const scenarios = store.scenarios.filter(item => item.mode === 'fixed').map(({ entry, exit }) => ({ entry, exit }));
   results.run('comparison', () => request('compare_scenarios', { scenarios }), () => publish('comparison'));
 }
@@ -52,6 +58,8 @@ function route() { return Object.hasOwn(routes, location.hash.slice(1)) ? locati
 function render(focus = false) {
   const active = document.activeElement;
   const activeId = active?.id;
+  const editingDate = active?.closest('[data-date-field]');
+  const selection = active?.matches('[data-date-text]') ? [active.selectionStart, active.selectionEnd, active.selectionDirection] : null;
   const activeFocus = active?.dataset.focus;
   const current = route();
   const t = translator(state.language);
@@ -84,12 +92,20 @@ function render(focus = false) {
       document.querySelector(`[data-date="${day}"]`)?.focus();
     },
     setCheckDate: day => {
+      const wasOngoing = state.ongoing;
       state.checkDate = day;
       state.ongoing = false;
       results.invalidate();
-      render();
-      const input = document.getElementById('field-checkDate');
-      input?.focus();
+      // Invalidate evidence immediately without replacing the active date editor.
+      document.querySelectorAll('[data-result-slot]').forEach(node => node.replaceChildren(computationState(t, 'empty')));
+      document.querySelectorAll('.metrics').forEach(node => node.replaceWith(metrics({ t, store, results: results.values, language: state.language })));
+      const ongoing = document.getElementById('field-ongoing');
+      if (ongoing) ongoing.checked = false;
+      if (wasOngoing) {
+        const updated = { ...ctx, ...state };
+        document.querySelectorAll('.calendar-widget').forEach(node => node.replaceWith(calendar(updated, Boolean(node.querySelector('.compact')))));
+        document.querySelectorAll('.day-detail').forEach(node => node.replaceWith(views.selection(updated)));
+      }
     },
     setLanguage: language => { if (!['en', 'ru'].includes(language)) return; state.language = language; persist(); render(); document.getElementById('field-language')?.focus(); },
     setTheme: theme => { state.theme = theme; persist(); render(); document.querySelector(`[data-focus="theme-${theme}"]`)?.focus(); },
@@ -114,12 +130,18 @@ function render(focus = false) {
   }, { kind: 'icon-button mobile-menu', symbol: 'menu', 'aria-controls': 'main-navigation', 'aria-expanded': String(menuOpen), 'aria-label': t('app.menu') });
   const main = h('main', { id: 'main', tabindex: '-1' }, routes[current](ctx),
     h('footer', { className: 'page-footer' }, h('p', {}, t('app.footer')), h('p', {}, t('app.legal'))));
+  const replacement = editingDate && main.querySelector(`#${CSS.escape(editingDate.id)}`);
+  if (replacement && editingDate.dataset.language === state.language) replacement.replaceWith(editingDate);
   document.getElementById('app').replaceChildren(h('div', { className: `app-shell ${menuOpen ? 'menu-open' : ''}` }, sidebar,
     h('div', { className: 'workspace' },
       h('header', { className: 'topbar' }, h('div', { className: 'breadcrumb' }, menuButton, h('span', {}, t('app.workspace')), h('span', { 'aria-hidden': 'true' }, '/'), h('strong', {}, t(`nav.${current}`))),
         h('div', { className: 'topbar-meta' }, h('span', { className: 'session-label' }, icon('shield'), t('app.session')), h('span', { className: 'badge preview' }, t('app.preview')))),
       h('div', { className: 'session-notice' }, icon('guide'), t('app.notice'), ' ', t(persistence.enabled ? 'storage.enabled' : 'storage.disabled')), main)));
   if (focus) main.querySelector('h1').focus();
+  else if (editingDate?.isConnected && active?.isConnected) {
+    active.focus({ preventScroll: true });
+    if (selection) active.setSelectionRange(...selection);
+  }
   else if (active && !active.isConnected) {
     if (activeId) document.getElementById(activeId)?.focus();
     else if (activeFocus) document.querySelector(`[data-focus="${CSS.escape(activeFocus)}"]`)?.focus();

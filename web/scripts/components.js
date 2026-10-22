@@ -1,5 +1,6 @@
 import { h, icon, button, field, showErrors } from './dom.js';
 import { MIN_DATE, MAX_DATE, formatDate, monthDays, moveMonth, recordsOnDate } from './dates.js';
+import { createDateDraft, dateInput, validateDateFields } from './date-input.js';
 
 // Presentation states are separate from Python's six domain statuses. No success fixture.
 export function computationState(t, state = 'unavailable') {
@@ -91,13 +92,14 @@ export function openEditor(ctx, kind, record = null) {
   let mode = scenario ? record?.mode ?? 'fixed' : record?.kind === 'ongoing' ? 'ongoing' : 'fixed';
   const modeFields = h('div', { className: 'form-grid' });
   const draft = { entry: record?.entry ?? '', exit: record?.exit ?? '', length: record?.length ?? '', horizon: record?.horizon ?? '365' };
+  const dateDrafts = { entry: createDateDraft(draft.entry, ctx.language), exit: createDateDraft(draft.exit, ctx.language) };
   function updateMode() {
-    for (const name of ['entry', 'exit', 'length', 'horizon']) {
+    for (const name of ['length', 'horizon']) {
       if (form.elements.namedItem(name)) draft[name] = form.elements.namedItem(name).value;
     }
     modeFields.replaceChildren(
-      field('entry', t(scenario ? mode === 'earliest' ? 'planner.searchStart' : 'planner.entry' : 'trip.entry'), { type: 'date', value: draft.entry, min: MIN_DATE, max: MAX_DATE, required: true, hint: t('trip.datesHint') }),
-      mode === 'ongoing' ? h('p', { className: 'hint' }, t('context.ongoing')) : mode === 'fixed' ? field('exit', t('trip.exit'), { type: 'date', value: draft.exit, min: MIN_DATE, max: scenario ? MAX_DATE : ctx.today, required: true }) :
+      dateInput('entry', t(scenario ? mode === 'earliest' ? 'planner.searchStart' : 'planner.entry' : 'trip.entry'), { draft: dateDrafts.entry, language: ctx.language, t, min: MIN_DATE, max: MAX_DATE }),
+      mode === 'ongoing' ? h('p', { className: 'hint' }, t('context.ongoing')) : mode === 'fixed' ? dateInput('exit', t('trip.exit'), { draft: dateDrafts.exit, language: ctx.language, t, min: MIN_DATE, max: scenario ? MAX_DATE : ctx.today }) :
         field('horizon', t('planner.horizon'), { type: 'number', value: draft.horizon, min: 1, max: 10000, step: 1, required: true }),
     );
     if (mode === 'earliest') modeFields.append(field('length', t('planner.length'), { type: 'number', value: draft.length, min: 1, max: 10000, step: 1, required: true }));
@@ -114,6 +116,7 @@ export function openEditor(ctx, kind, record = null) {
     h('button', { type: 'submit', className: 'button primary' }, t(scenario ? record ? 'planner.update' : 'planner.save' : record ? 'action.update' : 'action.save'))));
   form.addEventListener('submit', event => {
     event.preventDefault();
+    if (!validateDateFields(form)) return;
     const data = Object.fromEntries(new FormData(form));
     const outcome = scenario ? ctx.store.saveScenario(data, record?.id) : ctx.store.saveTrip(data, record?.id);
     if (Object.keys(outcome.issues).length) { showErrors(form, outcome.issues, t); return; }
@@ -146,7 +149,7 @@ function mountDialog(dialog) {
   document.getElementById('dialogs').append(dialog);
   dialog.addEventListener('keydown', event => {
     if (event.key !== 'Tab') return;
-    const controls = [...dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')];
+    const controls = [...dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(node => node.getClientRects().length && node.tabIndex >= 0);
     const first = controls[0], last = controls.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }

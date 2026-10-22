@@ -67,7 +67,7 @@ export function showErrors(form, issues, t) {
   const summary = form.querySelector('.form-error');
   summary.textContent = Object.keys(issues).length ? t(issues.form ?? 'feedback.errors') : '';
   for (const [name, code] of Object.entries(issues)) {
-    const control = form.elements.namedItem(name);
+    const control = form.querySelector(`#field-${name}`) ?? form.elements.namedItem(name);
     if (control) {
       control.setAttribute('aria-invalid', 'true');
       form.querySelector(`#field-${name}-error`).textContent = t(code);

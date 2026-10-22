@@ -1,3 +1,4 @@
+import { dateInputChecks } from './date-input-browser.mjs';
 // Optional browser checks: Playwright is test tooling, never a web dependency.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -237,7 +238,7 @@ try {
       await page.getByRole('button', { name: theme, exact: true }).click();
       const issues = await page.evaluate(() => {
         const issues = [];
-        for (const control of document.querySelectorAll('input, select, textarea')) {
+        for (const control of document.querySelectorAll('input:not([type=hidden]), select, textarea')) {
           if (!control.labels?.length && !control.getAttribute('aria-label')) issues.push('Unnamed field');
         }
         for (const button of document.querySelectorAll('button')) {
@@ -268,6 +269,7 @@ try {
     assert.equal(await failed.getByRole('button', { name: 'Reload interface' }).count(), 1);
     await failed.close();
   });
+  await dateInputChecks({ browser, origin, check });
   if (process.env.SCREENSHOT_DIR) {
     await mkdir(process.env.SCREENSHOT_DIR, { recursive: true });
     await page.setViewportSize({ width: 1440, height: 1080 });

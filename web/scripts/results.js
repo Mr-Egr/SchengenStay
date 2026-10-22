@@ -1,5 +1,6 @@
 import { h, field, button } from './dom.js';
-import { formatDate, MIN_DATE, MAX_DATE, parseDate } from './dates.js';
+import { formatDate } from './dates.js';
+import { dateInput } from './date-input.js';
 import { messages } from './i18n.js';
 import { computationState } from './components.js';
 
@@ -16,11 +17,7 @@ export function checkbox(name, label, checked, change) {
 
 export function contextPanel(ctx) {
   const { t } = ctx;
-  const checkDate = field('checkDate', t('calculator.date'), { type: 'date', min: MIN_DATE, max: MAX_DATE, value: ctx.checkDate, onChange: event => ctx.setCheckDate(event.target.value) });
-  if (ctx.checkDate && (!parseDate(ctx.checkDate) || ctx.checkDate < MIN_DATE || ctx.checkDate > MAX_DATE)) {
-    checkDate.querySelector('input').setAttribute('aria-invalid', 'true');
-    checkDate.querySelector('.field-error').textContent = t('error.date');
-  }
+  const checkDate = dateInput('checkDate', t('calculator.date'), { draft: ctx.checkDateDraft, language: ctx.language, t, onValue: ctx.setCheckDate });
   return h('section', { className: 'panel context-panel' }, h('h2', {}, t('context.title')),
     h('div', { className: 'form-grid' },
       checkDate,
@@ -79,6 +76,10 @@ export function resultCard(ctx, result, title = 'result.status') {
 }
 
 export function resultSlot(ctx, key) {
+  return h('div', { 'data-result-slot': key }, resultContents(ctx, key));
+}
+
+function resultContents(ctx, key) {
   const item = ctx.results.get(key);
   if (!item) return computationState(ctx.t, 'empty');
   if (item.state === 'ready') return resultCard(ctx, item.result);

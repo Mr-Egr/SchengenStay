@@ -1,5 +1,69 @@
 # Progress record
 
+## 2026-10-23 — Date input UX fix before Stage 6
+
+Started from clean `main`/`origin/main` at `85d51bf`. Audited the check-date
+controls in Overview, Calculator and Planner, completed/ongoing history editors,
+and fixed/maximum/earliest scenario editors. No additional date inputs exist in
+the calendar or confirmation dialogs. Stage 6 has not started.
+
+### Cause and changes
+
+Chrome's native date control edits separate date segments and can emit an early
+year such as `0002`. The check-date change handler immediately rebuilt the app
+and restored focus, disrupting the in-progress segmented edit. Native selection
+styling also did not match the product's green palette.
+
+- Added reusable `web/scripts/date-input.js`: ordinary text editing, English
+  `DD/MM/YYYY` and Russian `DD.MM.YYYY`, ISO paste, separate canonical ISO value,
+  blur/submit validation, accessible inline calendar, month/year navigation,
+  Today/Clear, keyboard controls and nested Escape behavior.
+- Updated `app.js`, `components.js`, `results.js`, `views.js` and `dom.js` to use shared date
+  drafts, retain editor values/focus/caret during rerenders, show errors on the
+  visible input, and clear stale results without replacing the active editor.
+  Calendar evidence also clears when a date edit revokes ongoing confirmation.
+- Updated `integration-i18n.js` and `web/styles/main.css` with localized hints,
+  errors and calendar labels, scoped green/sage selection/focus, dark-theme and
+  forced-colors support. No global focus suppression or new dependencies.
+- Added `tests/frontend/date-input.test.mjs` and `date-input-browser.mjs`;
+  extended `browser.mjs` and `python-browser.mjs` with date editing and actual
+  runtime-loading regressions. Updated ARCHITECTURE.md and docs/FRONTEND.md.
+  README stays concise and unchanged.
+
+Python source, arithmetic, compliance rules, public result contracts, source
+archive, worker and storage schema are unchanged. Raw editing drafts are never
+persisted. Complete dates reformat on language changes; unfinished text is kept
+verbatim and must be completed in the current language's format. Canceling an
+editor intentionally discards its unsaved draft.
+
+### Verification
+
+Used Python 3.12.14, Node 24.19.0, existing test-only Playwright 1.62.1 and installed
+Chrome 155.0.8059.85 on Windows. No dependencies were added or installed.
+
+| Check | Result |
+| --- | --- |
+| `python -m pytest -q` | 300 passed |
+| `ruff check .` | Passed |
+| `python -m pip check` | No broken requirements |
+| `node --test tests/frontend/*.test.mjs` | 32 passed |
+| `node tests/frontend/browser.mjs` | 26 interface checks passed |
+| `node tests/frontend/python-browser.mjs` | 14 real integration checks passed, including 18 full-response CPython parity cases |
+| `python scripts/build_browser.py --check` | Browser archive matches unchanged Python source |
+| `python scripts/check_docs.py` | 29 local links/anchors and 4 executable API examples passed |
+| `git diff --check` | No whitespace errors |
+
+Regressions cover typing `30.09.2026` one character at a time without cursor/node
+replacement, replacing the year, real clipboard paste, clearing, impossible and
+leap dates, calendar selection, date bounds, keyboard/Escape, modal/mode changes,
+and draft retention during real Pyodide startup. Date controls were exercised in
+both languages/themes at desktop, 390px and 320px widths, including a narrow modal
+and forced-colors focus. Existing interface tests also cover tablet layouts.
+
+Mobile checks use Chrome viewport sizes, not physical phones. Firefox, Safari and
+screen-reader certification remain unverified. The known Stage 5 runtime/offline
+and legal limitations remain unchanged. No deployment or Stage 6 work was done.
+
 ## 2026-10-23 — Stage 5 Python/browser integration
 
 Started from clean `main`/`origin/main` at `398a676`. Read PRODUCT.md,

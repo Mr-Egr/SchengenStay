@@ -15,7 +15,7 @@ function addTrip(ctx) {
   return button(ctx.t('history.add'), () => ctx.openTrip(), { kind: 'primary', symbol: 'plus', 'data-focus': 'add-trip' });
 }
 
-function selection(ctx) {
+export function selection(ctx) {
   const { t, language, store, selectedDay } = ctx;
   const recorded = recordsOnDate(store.trips, selectedDay, ctx.ongoing ? ctx.checkDate : null);
   const tentative = recordsOnDate(store.scenarios.filter(item => item.mode === 'fixed'), selectedDay);

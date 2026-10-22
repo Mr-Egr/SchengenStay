@@ -726,6 +726,17 @@ all results; a late success or failure cannot restore them. Language/theme-only
 changes preserve language-neutral results. Keyboard focus is restored after
 rendering and completion status is announced through the live region.
 
+Date editing uses the reusable `date-input.js` presentation component across
+check-date controls and history/scenario dialogs. A plain text draft is separate
+from its strict ISO form value; input events never normalize visible partial text
+or rebuild the editor. Validation occurs on blur/submission and uses existing
+calendar validation helpers, without adding day-rule calculations. Calendar
+selection commits an ISO date. Complete drafts reformat for English/Russian;
+incomplete drafts survive locale and editor-mode changes. Runtime rerenders retain
+the active date DOM node and selection. Check-date edits clear result slots and
+metrics without replacing the active editor. Python contracts, persistence and
+arithmetic are unchanged. See docs/FRONTEND.md for formats and keyboard controls.
+
 Overview/Calculator call the real snapshot and history APIs. Scenario cards call
 the corresponding fixed/max/earliest API. Fixed-date comparison uses
 `compare_scenarios` and displays each independent nested result. No hypothetical

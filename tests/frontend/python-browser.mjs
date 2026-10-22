@@ -89,7 +89,11 @@ try {
     assert.match(await page.locator('[data-evidence="result.violation"]').innerText(), /4 Oct 2023.*31 Mar 2024/s);
   });
   await check('invalid date, unsupported scope and limited history stay distinct', async () => {
-    await setDate('0001-01-01'); await run('INVALID_INPUT');
+    await setDate('0001-01-01'); await page.locator('[data-focus="run-history"]').click();
+    assert.equal(await page.locator('#field-checkDate').getAttribute('aria-invalid'), 'true');
+    assert.equal(await page.locator('[data-result-status]').count(), 0);
+    await setDate('2024-03-31'); await page.locator('#field-budget').fill('0'); await page.locator('#field-budget').blur(); await run('INVALID_INPUT');
+    await page.locator('#field-budget').fill('10000'); await page.locator('#field-budget').blur();
     assert.equal(await page.locator('.metric.used .metric-value').innerText(), '—');
     await setDate('2024-03-31'); await page.locator('#field-scope').selectOption('VISA_VALIDITY'); await run('OUT_OF_SCOPE');
     await confirm(); await page.locator('#field-budget').fill('1'); await page.locator('#field-budget').blur(); await run('HORIZON_LIMIT');
@@ -181,9 +185,15 @@ try {
     await rapid.locator('[data-focus="run-history"]').click();
     await rapid.locator('[data-runtime="loading"]').waitFor();
     await rapid.locator('#field-checkDate').fill('2024-01-01'); await rapid.locator('#field-checkDate').blur();
-    await rapid.locator('#field-checkDate').fill('2024-02-01'); await rapid.locator('#field-checkDate').blur();
+    await rapid.locator('#field-checkDate').fill('01/02/20');
+    await rapid.locator('#field-checkDate').evaluate(node => { window.pendingDateNode = node; });
     release(); await rapid.locator('[data-runtime="ready"]').waitFor({ timeout: 90000 });
     assert.equal(await rapid.locator('[data-result-status]').count(), 0);
+    assert.equal(await rapid.locator('#field-checkDate').inputValue(), '01/02/20');
+    assert.equal(await rapid.evaluate(() => document.activeElement === window.pendingDateNode), true);
+    assert.equal(await rapid.locator('#field-checkDate').evaluate(node => node.selectionStart), 8);
+    await rapid.locator('#field-checkDate').pressSequentially('24');
+    await rapid.locator('#field-checkDate').blur();
     await rapid.locator('[data-focus="run-history"]').click(); await rapid.locator('[data-value="check_date"]').first().waitFor();
     assert.match(await rapid.locator('[data-value="check_date"]').first().innerText(), /1 Feb 2024/);
     await rapid.close();

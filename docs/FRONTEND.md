@@ -56,6 +56,30 @@ have English/Russian copy plus safe fallback text for unexpected codes. Search
 probe details explicitly identify a potentially failing day; an earliest-search
 candidate is labeled as found or last attempted. Neither is travel permission.
 
+## Date entry
+
+Every history, check-date and scenario field uses the same text-and-calendar
+component. Type **DD/MM/YYYY** in English or **DD.MM.YYYY** in Russian; complete
+ISO **YYYY-MM-DD** dates can also be pasted. Text remains editable with ordinary
+selection/cursor behavior. Partial input is never rewritten into a different year.
+Errors appear on blur or submission, not during typing. Impossible dates and
+out-of-range values must be corrected before saving or requesting calculations.
+
+The calendar button or **Alt+Down** opens the inline picker. Arrow keys move by
+day/week; Home/End select the week's ends; Page Up/Down change months (with Shift,
+years). Enter selects the focused day. Escape closes the picker without changing
+the date; in an editor, a second Escape closes the editor. Month/year controls,
+Today and Clear are available. Focus and selection use scoped green/sage colors
+in both themes, retaining system focus colors in forced-colors mode.
+
+`date-input.js` separates the visible text draft from the canonical hidden ISO
+value. Only complete real dates produce an ISO value; existing store/Python
+validation remains authoritative. App rerenders preserve the active date control,
+selection and calendar. Valid dates reformat on language changes; unfinished text
+is retained verbatim and must be completed in the newly selected format. Editor
+mode changes retain date drafts; Cancel discards unsaved changes. Drafts are not
+saved to browser storage. Editing the check date immediately invalidates results.
+
 ## Runtime, packaging and modules
 
 - `python-worker.js` imports
@@ -164,10 +188,16 @@ requires access to the pinned runtime; failed downloads fail the test honestly.
 
 `browser.mjs` covers existing CRUD/forms, focus/keyboard, text safety, language,
 theme, seven-screen layouts at 1440/768/390/320 pixels, and startup failure.
+It also runs `date-input-browser.mjs`: character-by-character Russian entry,
+year replacement, actual clipboard paste, impossible dates, picker selection and
+keyboard/boundary navigation, modal drafts, locale/theme changes, forced colors
+and mobile picker layout. Node tests cover localized parsing and draft retention.
 `python-browser.mjs` exercises real Python UI calculations, full-response parity
 against direct CPython APIs from `tests/browser_cases.py`, explicit assumptions,
 ongoing blocking, partial searches, consent/reload/corruption, stale loading
-responses, CDN failure/retry, and static-GET-only network traffic. It records
+responses, CDN failure/retry, and static-GET-only network traffic. It verifies
+that unfinished date text, its DOM node and caret survive real Python startup.
+It records
 first-use desktop/mobile-viewport timing and a 500-record history. It does not
 pretend to emulate physical mobile CPU/network performance.
 

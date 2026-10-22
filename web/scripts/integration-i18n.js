@@ -1,6 +1,16 @@
 // Presentation-only vocabulary. Codes come from Python, never from JS arithmetic.
 export const integrationMessages = { en: {}, ru: {} };
 const copy = {
+  'date.format': ['DD/MM/YYYY', 'ДД.ММ.ГГГГ'],
+  'date.hint': ['DD/MM/YYYY. You can also paste a complete YYYY-MM-DD date.', 'ДД.ММ.ГГГГ. Можно также вставить полную дату ГГГГ-ММ-ДД.'],
+  'date.open': ['Open calendar', 'Открыть календарь'], 'date.close': ['Close calendar', 'Закрыть календарь'],
+  'date.choose': ['Choose a date', 'Выберите дату'], 'date.month': ['Month', 'Месяц'], 'date.year': ['Year', 'Год'],
+  'date.today': ['Today', 'Сегодня'], 'date.clear': ['Clear date', 'Очистить дату'],
+  'date.required': ['Enter a complete date or choose one from the calendar.', 'Введите полную дату или выберите её в календаре.'],
+  'date.invalid': ['Enter a real calendar date in DD/MM/YYYY format (for example, 30/09/2026). Check the day, month and four-digit year.', 'Введите существующую дату в формате ДД.ММ.ГГГГ (например, 30.09.2026). Проверьте день, месяц и год из четырёх цифр.'],
+  'date.range': ['Choose a date from {min} to {max}.', 'Выберите дату от {min} до {max}.'],
+  'date.yearError': ['Enter a four-digit year from 0001 to 9999.', 'Введите год из четырёх цифр от 0001 до 9999.'],
+  'date.keyboard': ['Arrow keys move by day or week. Page Up/Down changes month; Shift changes year. Escape closes.', 'Стрелки: день или неделя. Page Up/Down: месяц, с Shift — год. Escape закрывает календарь.'],
   'app.preview': ['Python powered', 'Расчёты на Python'],
   'app.notice': ['Memory only by default. Calculations stay on this device; optional history saving is in Settings.', 'По умолчанию данные только в памяти. Расчёты выполняются на устройстве; сохранение истории — в настройках.'],
   'app.session': ['On-device calculations', 'Расчёты на устройстве'],
