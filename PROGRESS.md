@@ -1,5 +1,135 @@
 # Progress record
 
+## 2026-10-23 — Stage 5 Python/browser integration
+
+Started from clean `main`/`origin/main` at `398a676`. Read PRODUCT.md,
+ARCHITECTURE.md, CALCULATION_RULES.md, ROADMAP.md, this progress record and
+`docs/FRONTEND.md`; inspected the Stage 1–4 source, models, public APIs and tests.
+The user authorized this integration and one commit/push after verification.
+The underlying Stage 1–3 algorithms and existing Python tests are unchanged.
+
+### Implemented
+
+- Pinned **Pyodide 314.0.7** running the actual source package in a module worker.
+  A deterministic, committed Python archive makes `web/` directly servable.
+  No JavaScript day-rule implementation, backend or runtime package install.
+- Version 1 JSON boundary calls all six existing public functions: `usage_on`,
+  `check_history`, `check_plan`, `max_continuous_stay`, `find_earliest_entry`,
+  `compare_scenarios`. Safe ISO/model conversion and recursive serialization
+  preserve enums, dates, validation issues, reasons, properties and nested results.
+- Overview/Calculator now show real selected-date counts and separate historical
+  violation evidence. Planner evaluates fixed/max/earliest scenarios and compares
+  independent fixed-date proposals without changing actual history. All six
+  statuses, historical versus proposed outcomes, limited prefixes and search
+  proof flags remain explicit. No result grants travel permission.
+- Explicit completeness/countability declarations and ongoing presence through
+  the selected check date. No affirmative context defaults in the browser.
+  Ongoing history supports actual snapshots, but planning requires a confirmed
+  actual exit. No nationality, visa or residence-permit adjudication.
+- Startup/loading/error/retry/cancel states; 60-second startup and 30-second
+  request limits; bounded pending queue. Revisions/tokens prevent stale results
+  and late errors from replacing current inputs/results. Relevant edits clear
+  results; language/theme changes preserve them. Focus restoration and live
+  completion announcements are retained.
+- English/Russian result/reason/issue text with unknown-code fallbacks. Existing
+  seven screens, themes, calendar and safe text-node rendering are preserved.
+- Memory by default, explicit local-saving consent, strict versioned/size-bounded
+  history restoration, disable/delete and storage-error feedback. Only history
+  and language/theme are saved; scenarios, results and declarations are not.
+  JSON import/export remains deferred to Stage 7.
+
+### Files
+
+New:
+
+- `src/schengenstay/browser.py` — JSON adapter/serializer, no new arithmetic.
+- `scripts/build_browser.py`, `web/python/schengenstay.zip` — deterministic static
+  source packaging, with a source-equality CI check.
+- `web/scripts/python-worker.js`, `pyodide-bridge.js`, `results.js`,
+  `integration-i18n.js`, `storage.js` — runtime/transport, result/context UI,
+  bilingual explanations and opt-in local storage.
+- `tests/test_browser.py`, `tests/browser_cases.py`,
+  `tests/frontend/integration.test.mjs`, `tests/frontend/python-browser.mjs` —
+  conversion/serialization/property tests, native reference outputs, transport/
+  storage tests and real-Pyodide browser parity/workflow checks.
+
+Modified:
+
+- `web/index.html`, `web/styles/main.css`, `web/scripts/app.js`, `components.js`,
+  `dates.js`, `i18n.js`, `store.js`, `views.js` — connected UI, explicit context,
+  ongoing records, safe relative loading, CSP and responsive result layouts.
+- Existing frontend state/browser tests retain their CRUD/accessibility coverage
+  while replacing Stage 4-only placeholder expectations with Stage 5 behavior.
+- `.github/workflows/ci.yml`, `package.json` — all frontend unit tests, archive
+  consistency check and optional integration-test shortcut.
+- README.md, ARCHITECTURE.md, CONTRIBUTING.md, ROADMAP.md, docs/FRONTEND.md,
+  this record and both `docs/images/overview-*.png` screenshots.
+
+### Verification actually performed
+
+Python 3.12.14, Node 24.19.0, bundled test-only Playwright 1.62.1 and installed
+Chrome 155.0.8059.85 were used. No packages were installed. Pyodide assets were
+actually downloaded from the pinned distribution. Test servers were temporary,
+loopback-only and closed with the test browser. Nothing was publicly deployed.
+
+| Check | Final local result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q` | 300 passed in 8.02 seconds; includes all 267 pre-existing tests |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found |
+| `node --test tests/frontend/*.test.mjs` | 28 passed |
+| `node tests/frontend/browser.mjs` | 17 existing interface/responsive/accessibility checks passed |
+| `node tests/frontend/python-browser.mjs` | 14 real integration checks, including 18 full-response CPython parity cases, passed |
+| `python scripts/build_browser.py --check` | Archive exactly matches current Python source |
+| `python scripts/check_docs.py` | 29 local links/anchors and 4 executable API examples passed |
+| `git diff --check` | No whitespace errors |
+
+Parity covers every public function and all six statuses: 90/91 days, multi-trip
+leap/year boundaries, invalid/duplicate/overlap cases, explicit ongoing stays,
+past versus proposed violations, rolling expiry in maximum/earliest searches,
+limited history/searches and a 500-record history. UI workflows independently
+assert matching counts, first-violation evidence and found dates. Existing
+published Commission fixtures continue passing; no new live official comparison
+is claimed. One added deterministic Hypothesis property checks 200 ISO-date/JSON
+round trips alongside the existing arithmetic properties.
+
+The final integration run measured **2,476 ms** for the first desktop calculation
+and **2,366 ms** in a fresh mobile-sized browser context. A new worker completed
+all 18 parity cases, including 500 records, in **1,570 ms**. These are local Chrome
+observations with ordinary browser/network caching, not benchmark guarantees or
+measurements on physical phones. The UI stays available while its worker loads.
+The network audit observed only static GET requests with no request bodies, query
+travel data or unexpected origins. Offline/CDN blocking and recovery were exercised.
+
+Browser review found a long Russian metric label overflowing at 320px; fixed
+minimum grid widths/text wrapping and reran all seven screens in both languages
+at 1440/768/390/320px. All six real result types also fit 390/320px in both
+languages. Updated empty-first desktop/mobile screenshots were visually inspected.
+A test parameter's oversized generated ID initially failed Windows test setup;
+short explicit IDs fixed the test harness. No calculation defect was hidden.
+
+### Remaining limitations / stop boundary
+
+Initial runtime loading depends on the pinned CDN and internet access unless
+assets happen to be cached; there is no guaranteed offline/PWA installation.
+The dependency-free Python package now has a browser-runtime dependency on
+Pyodide, but no paid service, account, API key or server is needed. Licensing,
+complete transitive tool locking and final release review remain earlier open
+items. A document meta CSP cannot replace a worker response-header policy on a
+host that supports one; deployment/security-header review is still deferred.
+
+Chrome and mobile-sized viewports were exercised, not Firefox/Safari, physical
+phones, throttled mobile networks or screen readers. Browser checks remain local
+tooling rather than CI-installed browser jobs. Local results do not establish
+that remote CI has run. Calendar markers show entered intervals, not compliance
+heatmaps; search outputs are not silently promoted to actual/fixed trips. No
+import/export, visa adjudication, final release testing or public deployment.
+The remote remained at `398a6769638e6c86a5322ceb2d6f16c65db6296f` before
+staging. Reviewed all changed/new files and archive members; a targeted credential
+pattern scan found no matches. Only source, synthetic tests, documentation,
+empty-state screenshots and the intentional source archive are included.
+Stop after the authorized Stage 5 commit/push and wait for review.
+
 ## 2026-10-23 — Stage 4 frontend interface
 
 Started from clean `main` and `origin/main` at `9e11198`. Read PRODUCT.md,

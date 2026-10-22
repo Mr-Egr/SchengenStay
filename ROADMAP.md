@@ -49,7 +49,7 @@ No Pyodide, duplicate JavaScript calculation engine, persistence, backend, or de
 tentative dates remain separate, no computed results are fabricated, Python and
 frontend checks pass, and local preview instructions and limitations are documented.
 
-## Stage 5 — Python integration and opt-in local persistence
+## Stage 5 — Python integration and opt-in local persistence (implemented)
 
 **Tasks:** pin Pyodide; load the Python package through a versioned JSON bridge,
 preferably in a worker; collect explicit scope/completeness and check-date inputs;
@@ -59,7 +59,9 @@ requests, loading/error handling, and consent-based, validated local persistence
 
 **Done when:** browser/Python fixtures match, unsupported input cannot appear
 affirmative, stale results are discarded after edits, storage is opt-in and
-clearable, and reload/privacy/integration tests pass. Requires separate authorization.
+clearable, and reload/privacy/integration tests pass. Implemented under the user’s
+Stage 5 authorization; see PROGRESS.md for actual verification and limitations.
+JSON import/export remains Stage 7, not part of this integration.
 
 ## Stage 6 — Planner and calendar integration review
 

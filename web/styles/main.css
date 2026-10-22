@@ -1,4 +1,28 @@
-/* Local assets and system fonts only. All colors are theme tokens. */
+/* Local visual assets and system fonts. All colors are theme tokens. */
+.context-panel { margin-block: 22px; }
+.context-panel > * + * { margin-top: 16px; }
+.check-control { display: flex; gap: 12px; align-items: flex-start; margin-block: 18px; cursor: pointer; }
+.check-control input[type='checkbox'] { width: 20px; height: 20px; min-width: 20px; margin-top: 3px; accent-color: var(--primary); }
+.runtime-panel { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; color: var(--muted); margin-block: 16px; }
+.runtime-panel.error { color: var(--danger); }
+.python-result { margin-block: 16px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 12px; overflow-wrap: anywhere; }
+.python-result.status-WITHIN_RULE { border-left-color: var(--primary); }
+.python-result.status-VIOLATION, .python-result.status-INVALID_INPUT { border-left-color: var(--danger); }
+.python-result.status-HORIZON_LIMIT, .python-result.status-OUT_OF_SCOPE, .python-result.status-INSUFFICIENT_DATA { border-left-color: var(--warm-text); }
+.result-status { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.result-status > span { font-size: .82rem; color: var(--muted); }
+.result-status strong { font-size: 1.05rem; }
+.result-reasons, .result-issues { padding-left: 22px; font-size: .9rem; }
+.result-reasons li + li, .result-issues li + li { margin-top: 6px; }
+.result-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: .9rem; }
+.result-details dt { color: var(--muted); }
+.result-details dd { margin: 0; font-weight: 600; text-align: right; }
+.snapshot { background: var(--surface-soft); border-radius: 8px; padding: 14px; margin-block: 12px; }
+.snapshot h4 { margin: 0 0 8px; }
+.snapshot p, .result-proof { font-size: .88rem; }
+.nested-result { margin-block: 12px; }
+.nested-result summary { cursor: pointer; font-weight: 600; }
+.scenario-result .python-result { padding: 14px; }
 :root {
   color-scheme: light;
   --bg: #f7f8f5; --surface: #fff; --surface-soft: #f2f5ef; --text: #243b32;
@@ -89,9 +113,9 @@ main { max-width: 1440px; margin: auto; padding: 35px 38px 20px; }
 .hero-art img { width: 100%; max-height: 275px; height: auto; }
 .hero-art figcaption { color: var(--muted); font-size: .65rem; font-style: italic; margin-top: -8px; }
 .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 22px 0 27px; }
-.metric { padding: 20px 23px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); }
+.metric { min-width: 0; padding: 20px 23px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); }
 .metric-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.metric-heading h2 { font-weight: 500; font-size: .82rem; }
+.metric-heading h2 { min-width: 0; overflow-wrap: anywhere; font-weight: 500; font-size: .82rem; }
 .metric-heading .icon { color: var(--muted); width: 18px; }
 .metric-value { font-size: 2.35rem; line-height: 1.25; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.05em; margin: 9px 0 3px; }
 .metric p { font-size: .75rem; color: var(--muted); }
@@ -245,7 +269,7 @@ dialog #dialog-note { font-size: .8rem; margin: 8px 0 24px; }
   .hero-art figcaption { margin-top: 0; }
   .hero-actions { gap: 13px; margin-top: 18px; }
   .hero-actions .text-link { font-size: .74rem; }
-  .metrics { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .metric.trips { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 15px; }
   .metric.trips .metric-heading { grid-column: 1; }
   .metric.trips .metric-value { grid-column: 2; grid-row: 1 / 3; margin: 0; }

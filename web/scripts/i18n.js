@@ -1,3 +1,4 @@
+import { integrationMessages } from './integration-i18n.js';
 export const messages = {
   en: {
     'nav.dashboard': 'Overview', 'nav.history': 'Travel history', 'nav.calculator': 'Calculator', 'nav.planner': 'Travel planner', 'nav.calendar': 'Calendar', 'nav.settings': 'Settings', 'nav.guide': 'How it works',
@@ -58,6 +59,8 @@ export const messages = {
     'error.date': 'Укажите дату от 29 июня 0001 до 31 декабря 9999.', 'error.order': 'Выезд не может быть раньше въезда.', 'error.futureHistory': 'Завершённая поездка не может заканчиваться в будущем. Создайте сценарий.', 'error.futurePlan': 'Для будущего сценария выберите дату после сегодняшней.', 'error.overlap': 'Даты пересекаются с другой поездкой, включая день въезда или выезда. Измените существующую запись.', 'error.label': 'Не более 80 символов в названии.', 'error.note': 'Не более 500 символов в заметках.', 'error.integer': 'Введите целое число от 1 до 10 000.', 'error.mode': 'Выберите доступный способ планирования.', 'error.tripLimit': 'Можно добавить до 500 завершённых поездок.', 'error.scenarioLimit': 'Можно добавить до 100 сценариев.', 'error.missing': 'Эта запись больше недоступна.',
   },
 };
+
+for (const language of ['en', 'ru']) Object.assign(messages[language], integrationMessages[language]);
 
 export function translator(language = 'en') {
   const dictionary = messages[language] ?? messages.en;

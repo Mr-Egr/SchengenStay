@@ -47,6 +47,6 @@ export function monthDays(month) {
   return result;
 }
 
-export function recordsOnDate(records, value) {
-  return records.filter(item => item.entry <= value && item.exit >= value);
+export function recordsOnDate(records, value, ongoingThrough = null) {
+  return records.filter(item => item.entry <= value && (item.kind === 'ongoing' ? ongoingThrough && value <= ongoingThrough : item.exit >= value));
 }

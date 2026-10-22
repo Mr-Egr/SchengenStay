@@ -15,12 +15,14 @@ export function emptyState(title, body, action, symbol = 'history') {
 
 export function metrics(ctx) {
   const { t, store } = ctx;
+  const snapshot = ctx.results?.get('usage')?.result?.snapshot;
+  const values = { used: snapshot?.used_days, remaining: snapshot?.remaining_arithmetic_days };
   return h('div', { className: 'metrics' },
     ...[['used', 'calendar'], ['remaining', 'globe'], ['trips', 'history']].map(([key, symbol]) =>
       h('article', { className: `metric ${key}` },
         h('div', { className: 'metric-heading' }, h('h2', {}, t(`metric.${key}`)), icon(symbol)),
-        h('div', { className: 'metric-value', 'aria-label': key === 'trips' ? String(store.trips.length) : t('metric.pending') }, key === 'trips' ? String(store.trips.length).padStart(2, '0') : '—'),
-        h('p', {}, key === 'trips' ? t('metric.tripsDetail') : t('metric.pendingDetail')))));
+        h('div', { className: 'metric-value', 'aria-label': key === 'trips' ? String(store.trips.length) : String(values[key] ?? t('metric.pending')) }, key === 'trips' ? String(store.trips.length).padStart(2, '0') : String(values[key] ?? '—')),
+        h('p', {}, key === 'trips' ? t('metric.tripsDetail') : snapshot ? `${formatDate(snapshot.check_date, ctx.language)} · ${t('result.remainingNote')}` : t('metric.pendingDetail')))));
 }
 
 export function tripList(ctx, trips, compact = false) {
@@ -28,7 +30,7 @@ export function tripList(ctx, trips, compact = false) {
   return h('ul', { className: 'trip-list' }, trips.map(trip => h('li', { className: 'trip-row' },
     h('span', { className: 'trip-symbol' }, icon('planner')),
     h('div', { className: 'trip-copy' }, h('h3', {}, trip.label || t('trip.untitled')),
-      h('p', {}, formatDate(trip.entry, language), ' — ', formatDate(trip.exit, language)),
+      h('p', {}, formatDate(trip.entry, language), ' — ', trip.kind === 'ongoing' ? t('trip.ongoing') : formatDate(trip.exit, language)),
       !compact && trip.note ? h('p', { className: 'trip-note' }, trip.note) : null),
     compact ? h('span', { className: 'badge subtle' }, t('calendar.recorded')) :
       h('div', { className: 'row-actions' },
@@ -45,7 +47,7 @@ export function calendar(ctx, compact = false) {
     weekdays.map(name => h('span', { className: 'weekday', 'aria-hidden': 'true' }, name)),
     monthDays(month).map(value => {
       if (!value) return h('span', { className: 'calendar-blank', 'aria-hidden': 'true' });
-      const past = recordsOnDate(store.trips, value), plans = recordsOnDate(fixed, value);
+      const past = recordsOnDate(store.trips, value, ctx.ongoing ? ctx.checkDate : null), plans = recordsOnDate(fixed, value);
       const kind = past.length && plans.length ? 'both' : past.length ? 'recorded' : plans.length ? 'tentative' : 'clear';
       return h('button', {
         type: 'button', className: `calendar-day ${kind} ${value === ctx.today ? 'today' : ''}`,
@@ -86,7 +88,7 @@ export function openEditor(ctx, kind, record = null) {
   const form = h('form', { noValidate: true, autocomplete: 'off' });
   const title = scenario ? t(record ? 'planner.edit' : 'planner.new') : t(record ? 'history.edit' : 'history.add');
   const titleNode = h('h2', { id: 'dialog-title' }, title);
-  let mode = record?.mode ?? 'fixed';
+  let mode = scenario ? record?.mode ?? 'fixed' : record?.kind === 'ongoing' ? 'ongoing' : 'fixed';
   const modeFields = h('div', { className: 'form-grid' });
   const draft = { entry: record?.entry ?? '', exit: record?.exit ?? '', length: record?.length ?? '', horizon: record?.horizon ?? '365' };
   function updateMode() {
@@ -95,12 +97,12 @@ export function openEditor(ctx, kind, record = null) {
     }
     modeFields.replaceChildren(
       field('entry', t(scenario ? mode === 'earliest' ? 'planner.searchStart' : 'planner.entry' : 'trip.entry'), { type: 'date', value: draft.entry, min: MIN_DATE, max: MAX_DATE, required: true, hint: t('trip.datesHint') }),
-      mode === 'fixed' ? field('exit', t('trip.exit'), { type: 'date', value: draft.exit, min: MIN_DATE, max: scenario ? MAX_DATE : ctx.today, required: true }) :
+      mode === 'ongoing' ? h('p', { className: 'hint' }, t('context.ongoing')) : mode === 'fixed' ? field('exit', t('trip.exit'), { type: 'date', value: draft.exit, min: MIN_DATE, max: scenario ? MAX_DATE : ctx.today, required: true }) :
         field('horizon', t('planner.horizon'), { type: 'number', value: draft.horizon, min: 1, max: 10000, step: 1, required: true }),
     );
     if (mode === 'earliest') modeFields.append(field('length', t('planner.length'), { type: 'number', value: draft.length, min: 1, max: 10000, step: 1, required: true }));
   }
-  const selector = scenario ? field('mode', t('planner.mode'), { value: mode, options: ['fixed', 'maximum', 'earliest'].map(value => [value, t(`planner.${value}`)]), onChange: event => { mode = event.target.value; updateMode(); showErrors(form, {}, t); } }) : null;
+  const selector = scenario ? field('mode', t('planner.mode'), { value: mode, options: ['fixed', 'maximum', 'earliest'].map(value => [value, t(`planner.${value}`)]), onChange: event => { mode = event.target.value; updateMode(); showErrors(form, {}, t); } }) : field('kind', t('trip.kind'), { value: mode === 'ongoing' ? 'ongoing' : 'completed', options: [['completed', t('trip.completed')], ['ongoing', t('trip.ongoing')]], onChange: event => { mode = event.target.value === 'ongoing' ? 'ongoing' : 'fixed'; updateMode(); showErrors(form, {}, t); } });
   form.append(h('div', { className: 'form-error', role: 'alert', tabindex: '-1' }),
     field('label', t('trip.label'), { value: record?.label ?? '', maxlength: 80, placeholder: t('trip.labelHint') }));
   if (selector) form.append(selector);
@@ -115,7 +117,7 @@ export function openEditor(ctx, kind, record = null) {
     const data = Object.fromEntries(new FormData(form));
     const outcome = scenario ? ctx.store.saveScenario(data, record?.id) : ctx.store.saveTrip(data, record?.id);
     if (Object.keys(outcome.issues).length) { showErrors(form, outcome.issues, t); return; }
-    ctx.changed(t(scenario ? 'feedback.scenario' : record ? 'feedback.updated' : 'feedback.saved'));
+    ctx.changed(t(scenario ? 'feedback.scenario' : record ? 'feedback.updated' : 'feedback.saved'), !scenario);
     dialog.close();
   });
   dialog.append(h('div', { className: 'dialog-heading' }, titleNode, button('', () => dialog.close(), { kind: 'icon-button', symbol: 'close', 'aria-label': t('action.close') })),
@@ -132,7 +134,7 @@ export function confirmRemoval(ctx, kind, record) {
   const cancel = button(t('action.cancel'), () => dialog.close());
   dialog.append(h('div', { className: 'dialog-actions' }, cancel, button(t('delete.confirm'), () => {
     if (kind === 'trip') ctx.store.removeTrip(record.id); else ctx.store.removeScenario(record.id);
-    ctx.changed(t('feedback.removed'));
+    ctx.changed(t('feedback.removed'), kind === 'trip');
     dialog.close();
   }, { kind: 'destructive' })));
   mountDialog(dialog);

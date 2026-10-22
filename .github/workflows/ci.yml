@@ -27,6 +27,8 @@ jobs:
         with:
           node-version: "22"
       - name: Frontend unit and static checks
-        run: node --test tests/frontend/state.test.mjs
+        run: node --test tests/frontend/*.test.mjs
+      - name: Browser Python source archive consistency
+        run: python scripts/build_browser.py --check
       - name: Documentation links and examples
         run: python scripts/check_docs.py

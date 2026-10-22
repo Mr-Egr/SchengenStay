@@ -5,6 +5,7 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "test": "node --test tests/frontend/*.test.mjs",
-    "test:browser": "node tests/frontend/browser.mjs"
+    "test:browser": "node tests/frontend/browser.mjs",
+    "test:integration": "node tests/frontend/python-browser.mjs"
   }
 }

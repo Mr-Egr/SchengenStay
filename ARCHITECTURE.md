@@ -5,8 +5,9 @@
 > [section 13](#13-implemented-stage-1-engine), and the Stage 2 compliance contract
 > in [section 14](#14-stage-2-compliance-contract). Stage 3 planning is documented
 > in [section 15](#15-stage-3-travel-planner). The frontend preview is documented in
-> [section 16](#16-stage-4-frontend-preview). Python/browser integration and
-> persistence move to Stage 5 under the user's revised order; deployment is deferred.
+> [section 16](#16-stage-4-frontend-preview). Implemented Python/browser integration
+> and opt-in persistence are in [section 17](#17-stage-5-pythonbrowser-integration).
+> Deployment remains deferred. Earlier stage sections retain their historical scope.
 
 ## 1. Architectural goals
 
@@ -169,7 +170,7 @@ with [README_START_HERE.md](README_START_HERE.md).
    intervals, and `usage_on()`. Stage 2 adds `check_history()` and fixed-itinerary
    `check_plan()` with first-violation reporting (section 14). Stage 3 adds bounded
    searches and independent scenario comparison (section 15). Stage 4 supplies a
-   frontend preview only (section 16); the browser does not yet run calculations.
+   frontend preview (section 16); Stage 5 connects real Python calculations (section 17).
 2. **Canonical status vocabulary:** `CALCULATION_RULES.md` section 7 is the public
    result contract. PRODUCT.md also uses `VALID_FOR_RULE` and
    `WITHIN_90_180_RULE`; these are not additional API statuses. The supported
@@ -630,3 +631,139 @@ search outcomes. UI-only labels remain metadata; notes must never determine
 legal scope. Persistent storage requires informed consent and its own versioned
 schema/validation. Source notes and pending official/live-calculator comparisons
 remain unchanged. The frontend is informational and cannot grant travel permission.
+
+
+## 17. Stage 5 Python/browser integration
+
+The static UI now executes the **same Python source package** through pinned
+Pyodide 314.0.7 in a module Web Worker. Stage 1–3 algorithms and public signatures
+are unchanged. No calculation rules were ported to JavaScript. No backend,
+account, database, Pyodide package installation, or deployment was introduced.
+See [the browser guide](docs/FRONTEND.md) for launch, packaging, lifecycle,
+privacy, troubleshooting, screenshots and test commands.
+
+### Version 1 boundary
+
+`schengenstay.browser.handle_json(payload: str) -> str` accepts a maximum
+512,000 UTF-8 bytes and returns `{ "schema_version": 1, "result": ... }`.
+The request has `schema_version: 1` and one allowlisted `method`:
+`usage_on`, `check_history`, `check_plan`, `max_continuous_stay`,
+`find_earliest_entry`, or `compare_scenarios`.
+
+Common fields:
+
+| Field | Wire representation / semantics |
+| --- | --- |
+| `stays` | List of completed `{kind: "completed", id, entry, exit, note?}` or ongoing `{kind: "ongoing", id, entry}` records; `null` remains missing history |
+| `as_of` | Strict ASCII `YYYY-MM-DD`; an explicit date is required for meaningful results |
+| `scope` | One `CalculationScope` string; missing/unknown remains unconfirmed |
+| `history_complete` | Boolean; missing defaults to false, never to the domain API's affirmative default |
+| `ongoing_confirmed` | Boolean; explicit continuous presence through `as_of`, false by default |
+| `max_inspected_days` | Integer 1–10,000, default 10,000; domain validator rejects booleans and malformed values |
+
+Method-specific fields mirror the Python signatures: `plan: {entry, exit}`;
+`arrival` and `horizon_days`; `length_days`, `search_start` and `horizon_days`;
+or `scenarios: [{entry, exit}, ...]`. Unknown top-level keys, versions or method
+names produce structured `INVALID_INPUT`. Malformed JSON/oversize requests also
+produce `INVALID_INPUT`; unexpected execution failures remain transport failures
+and cannot become arithmetic success. No user-provided Python source is accepted.
+
+The adapter converts dates with `parse_iso_date`, scope strings to
+`CalculationScope`, and records to existing frozen models. Malformed fields are
+preserved for the domain validators, including duplicate IDs and overlaps.
+Explicit ongoing confirmation is an additional browser input prerequisite:
+missing confirmation yields `INSUFFICIENT_DATA` with the bridge-only explanation
+`ONGOING_CONFIRMATION_REQUIRED`. Invalid/unsupported context retains precedence.
+Planning still delegates to the existing `ONGOING_EXIT_REQUIRED` behavior.
+
+`serialize()` converts dataclasses recursively, enums to their values, dates to
+ISO strings and tuples to JSON arrays. It includes all fields plus documented
+properties: `human_explanation_keys`, `first_violation_date`, `violation_count`,
+`used_days`, `remaining_arithmetic_days`, `window_start`, `window_end` when the
+result type provides them. Validation issue fields/codes, nested history/itinerary
+results, warnings, scope notes, inspection counts and search proof flags survive.
+
+The `usage_on` bridge method first gates context through `check_history`, then
+calls the actual `usage_on` when a numerical snapshot is meaningful. Its result
+contains `status`, `reason_codes`, `snapshot`, `history_result`, and `issues`.
+The status describes history, not just the snapshot. Other methods serialize the
+native result directly. A blocked snapshot remains null; a history inspection
+limit may expose a factual final-date snapshot without claiming history passed.
+
+Example boundary invocation (no separate calculation implementation):
+
+```python
+from schengenstay.browser import handle_json
+import json
+
+request = {
+    "schema_version": 1, "method": "check_history",
+    "stays": [{"kind": "completed", "id": "example",
+               "entry": "2024-01-01", "exit": "2024-03-31"}],
+    "as_of": "2024-03-31", "scope": "COUNTABLE_SHORT_STAYS",
+    "history_complete": True,
+}
+response = json.loads(handle_json(json.dumps(request)))
+assert response["result"]["status"] == "VIOLATION"
+assert response["result"]["first_violation_date"] == "2024-03-31"
+assert response["result"]["first_violation"]["used_days"] == 91
+```
+
+### Worker, state and presentation
+
+The worker downloads the pinned runtime and relative Python source archive,
+unpacks it, imports a fixed callable and passes JSON as data. It never constructs
+Python source from user strings. Runtime output is suppressed to avoid exposing
+travel records in logs. The main thread sends IDs and receives JSON-compatible
+responses; there is no server calculation endpoint.
+
+`PythonBridge` owns one worker, startup/request timers (60/30 seconds), an
+eight-request pending cap, and cancellation by termination. A failure stops the
+worker and rejects outstanding work; retry creates a fresh one. Worker-generation
+checks discard messages from obsolete instances. `LatestResults` adds per-key
+request tokens and input revisions. Editing relevant fields immediately clears
+all results; a late success or failure cannot restore them. Language/theme-only
+changes preserve language-neutral results. Keyboard focus is restored after
+rendering and completion status is announced through the live region.
+
+Overview/Calculator call the real snapshot and history APIs. Scenario cards call
+the corresponding fixed/max/earliest API. Fixed-date comparison uses
+`compare_scenarios` and displays each independent nested result. No hypothetical
+record is promoted to history. Search status and historical status remain separate;
+maximum probe details may contain the first failing day without invalidating the
+proven preceding prefix. Limited prefixes are explicitly unproven. Earliest-entry
+failure within a horizon never means permanent impossibility unless the engine's
+separate arithmetic proof flag says so. All outcomes remain non-authorizing.
+
+The existing domain complexity/limits from sections 13–15 still apply. JSON
+conversion is linear in request/result size. A history UI check currently obtains
+both snapshot and history responses, so it performs two bounded history gates;
+this favors explicit public API reuse over new caching or algorithm changes.
+Worker placement protects the UI thread; timeout/cancel discards unfinished work
+rather than inventing partial numerical answers. Actual domain partial-search
+results retain their original proof/budget fields.
+
+### Persistence boundary and verification
+
+The UI stays in memory unless the user opts in. Only actual history and language/
+theme preferences are saved under `schengenstay.workspace.v1`. Schema/consent,
+UTF-8 size, record count/IDs, metadata, dates, overlaps and preference values are
+validated before atomic restoration. Scope/complete/ongoing declarations, results
+and hypothetical scenarios are intentionally not persisted. Disabling saving
+removes only this app's saved key; memory records remain until reload. Storage
+errors, including failed deletion, are visible. Labels and notes use text nodes.
+JSON import/export remains Stage 7.
+
+Tests exercise the unchanged domain APIs through JSON, real Pyodide, and UI forms.
+Direct CPython reference outputs are compared recursively with browser worker
+outputs for all six APIs/statuses, ongoing/invalid/overlapping inputs, 90/91 days,
+rolling expiry, calendar boundaries, history/itinerary separation, limited search,
+and 500 records. UI cases assert the same numerical/evidence results. Transport
+unit tests cover out-of-order success/error, timeouts and cancellation. Browser
+checks exercise stale loading responses, storage consent/reload/corruption,
+translations, runtime failure/retry, repository-prefix hosting and network GETs.
+
+Initial runtime loading remains a pinned external asset dependency, with normal
+browser cache behavior only. Broader browser/physical-device/screen-reader testing,
+full offline support, live Commission calculator comparison and public release
+remain unclaimed. PROGRESS.md records only checks actually performed.

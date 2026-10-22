@@ -133,11 +133,13 @@ test('English and Russian dictionaries have matching keys and placeholders', () 
   assert.equal(translator('en')('planner.days', { count: 12 }), '12 days');
   assert.throws(() => translator('en')('missing'));
 });
-test('browser code has no storage, network, evaluation or duplicate engine calls', () => {
+test('browser code confines persistence/network to adapters and contains no day-rule engine', () => {
   for (const file of readdirSync('web/scripts').filter(name => name.endsWith('.js'))) {
     const source = readFileSync(`web/scripts/${file}`, 'utf8');
-    assert.doesNotMatch(source, /\b(localStorage|sessionStorage|indexedDB|XMLHttpRequest|WebSocket|serviceWorker)\b|\b(fetch|eval)\s*\(|\.innerHTML\s*=/, file);
-    assert.doesNotMatch(source, /\b(rolling_window|count_occupied_days|remaining_arithmetic_days|WITHIN_RULE|VIOLATION)\b/, file);
+    assert.doesNotMatch(source, /\b(sessionStorage|indexedDB|XMLHttpRequest|WebSocket|serviceWorker)\b|\beval\s*\(|\.innerHTML\s*=/, file);
+    if (file !== 'storage.js') assert.doesNotMatch(source, /\blocalStorage\b/, file);
+    if (file !== 'python-worker.js') assert.doesNotMatch(source, /\bfetch\s*\(/, file);
+    assert.doesNotMatch(source, /\b(rolling_window|count_occupied_days)\b|90\s*-|179\s*\*/, file);
   }
 });
 test('module syntax and local import targets are valid', async () => {
@@ -151,7 +153,7 @@ test('module syntax and local import targets are valid', async () => {
 });
 test('entry document has local assets, CSP and a no-script explanation', () => {
   const html = readFileSync('web/index.html', 'utf8');
-  assert.match(html, /connect-src 'none'/);
+  assert.match(html, /connect-src 'self' https:\/\/cdn.jsdelivr.net\/pyodide\/v314.0.7\/full\//);
   assert.match(html, /form-action 'none'/);
   assert.match(html, /<noscript>/);
   assert.match(html, /<script type="module"/);

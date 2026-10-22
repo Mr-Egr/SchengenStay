@@ -2,9 +2,9 @@
 
 Read the five supplied requirements documents and the Stage 1 decisions in ARCHITECTURE.md
 before making changes. Work on one authorized roadmap stage at a time. Stage 4
-adds the frontend preview on top of the separate Stage 1–3 Python package.
-Pyodide integration and optional persistence are deferred to Stage 5. Do not add
-JavaScript calculation logic. See ARCHITECTURE.md sections 14–16 and the
+introduced the frontend; Stage 5 connects the same Stage 1–3 package through
+a pinned Pyodide worker and adds opt-in history saving. Do not add JavaScript
+calculation logic. See ARCHITECTURE.md sections 14–17 and the
 [frontend guide](docs/FRONTEND.md) for contracts, local preview, and browser checks.
 
 ## Local workflow
@@ -13,8 +13,11 @@ JavaScript calculation logic. See ARCHITECTURE.md sections 14–16 and the
 2. Install the package and its development extra: `python -m pip install -e ".[dev]"`.
 3. Before changing a future algorithm, add tests for its intended behavior.
 4. Run `python -m pip check`, `python -m pytest -q`, and `ruff check .` with that
-   environment. Also run `node --test tests/frontend/state.test.mjs` with Node 22+
-   and `python scripts/check_docs.py`. Record actual results in PROGRESS.md.
+   environment. Also run `node --test tests/frontend/*.test.mjs` with Node 22+
+   and `python scripts/check_docs.py`. Regenerate the committed Python archive after
+   source edits with `python scripts/build_browser.py`; verify it with `--check`.
+   Run both browser suites in the frontend guide for integration changes.
+   Record actual results in PROGRESS.md.
 5. Summarize changed behavior, relevant tests, limitations, and the next stage.
    Stop at the authorized stage boundary.
 
@@ -75,12 +78,15 @@ python3.12 -m venv .venv
 
 With an activated environment, the checks are `python -m pytest -q` and
 `ruff check .`. Tests import the installed package; install it before testing.
-Initial installation needs access to the Python package index. Checks themselves
-need no network, browser, accounts, API keys, or paid services.
+Initial installation needs access to the Python package index. Python and Node
+unit checks run offline. The optional real-Pyodide integration suite needs a browser
+and initial runtime downloads; it needs no account, API key, or paid service.
 
 ## Dependencies and CI
 
-- Runtime: Python standard library only; no third-party runtime dependencies.
+- Python library runtime: standard library only.
+- Browser runtime: Pyodide 314.0.7 from its pinned jsDelivr distribution. No npm
+  runtime package installation; see docs/FRONTEND.md for asset loading and limits.
 - Build: setuptools, used by pip to install the `src/` package.
 - Development: pytest for unit tests, Ruff for linting, and Hypothesis for
   property-based arithmetic tests against an independent date-set oracle.
@@ -123,18 +129,19 @@ PROGRESS.md                    commands, results and remaining work
 The original five requirements documents are preserved. Unit tests cover inclusive
 boundaries, empty/one-day histories, leap/century years, the 90th/91st day, gradual
 expiry, future dates, duplicate coverage, ongoing assumptions, and date extremes.
-Fifteen deterministic property tests each run 200 passing generated examples.
+Sixteen deterministic property tests each run 200 passing generated examples,
+including the Stage 5 ISO/JSON round trip.
 Synthetic/manual fixtures remain separate from the published example fixture,
 which records source, retrieval date, pages, and the distinction between stated
-examples and derived boundary expectations. All tests run offline.
+examples and derived boundary expectations. Python and Node unit tests run offline; real browser integration loads Pyodide.
 
 The [European Commission calculator page](https://home-affairs.ec.europa.eu/policies/schengen/border-crossing/short-stay-calculator_en)
 was reviewed on 2026-10-22 for the rolling-day principle. The original manual URL
 failed during earlier work and returned HTTP 404 in Stage 2; an accessible official
 copy supplied the six cases now tested. See CALCULATION_RULES.md section 10 for
-the source. Live calculator comparison, broader reference coverage, browser tests,
-and release gates remain open. No license has been selected; choose one before public
+the source. Live calculator comparison, broader reference coverage, cross-browser/physical
+device review, and release gates remain open. No license has been selected; choose one before public
 distribution rather than assuming licensing terms on the owner's behalf.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 4 stops for review;
-Stage 5 integration requires separate authorization.
+See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 5 stops for review;
+subsequent stages require separate authorization.

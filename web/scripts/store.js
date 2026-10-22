@@ -20,9 +20,13 @@ function metadataIssues(input) {
 }
 
 export function validateTrip(input, history = [], id = null, today = todayISO()) {
-  const issues = { ...validateDates(input), ...metadataIssues(input) };
+  const ongoing = input.kind === 'ongoing';
+  const end = ongoing ? today : input.exit;
+  const issues = { ...validateDates({ ...input, exit: end }), ...metadataIssues(input) };
+  if (input.kind && !['completed', 'ongoing'].includes(input.kind)) issues.kind = 'error.mode';
+  if (ongoing && input.entry > today) { delete issues.exit; issues.entry = 'error.futureHistory'; }
   if (!issues.exit && input.exit > today) issues.exit = 'error.futureHistory';
-  if (!issues.entry && !issues.exit && history.some(item => item.id !== id && input.entry <= item.exit && input.exit >= item.entry)) issues.entry = 'error.overlap';
+  if (!issues.entry && !issues.exit && history.some(item => item.id !== id && input.entry <= (item.kind === 'ongoing' ? today : item.exit) && end >= item.entry)) issues.entry = 'error.overlap';
   return issues;
 }
 
@@ -38,7 +42,7 @@ export function validateScenario(input, today = todayISO()) {
   return issues;
 }
 
-export function createStore({ today = todayISO(), makeId = () => crypto.randomUUID() } = {}) {
+export function createStore({ today = todayISO(), makeId = () => crypto.randomUUID(), planningDate = () => today } = {}) {
   let trips = [];
   let scenarios = [];
   return Object.freeze({
@@ -49,13 +53,13 @@ export function createStore({ today = todayISO(), makeId = () => crypto.randomUU
       if (id !== null && !trips.some(item => item.id === id)) issues.form = 'error.missing';
       if (id === null && trips.length >= LIMITS.trips) issues.form = 'error.tripLimit';
       if (Object.keys(issues).length) return { issues };
-      const trip = Object.freeze({ id: id ?? makeId(), entry: input.entry, exit: input.exit, label: input.label.trim(), note: input.note.trim() });
+      const trip = Object.freeze({ id: id ?? makeId(), kind: input.kind ?? 'completed', entry: input.entry, exit: input.kind === 'ongoing' ? null : input.exit, label: input.label.trim(), note: input.note.trim() });
       trips = [...trips.filter(item => item.id !== id), trip].sort((a, b) => b.entry.localeCompare(a.entry));
       return { record: trip, issues: {} };
     },
     removeTrip(id) { trips = trips.filter(item => item.id !== id); },
     saveScenario(input, id = null) {
-      const issues = validateScenario(input, today);
+      const issues = validateScenario(input, planningDate());
       if (id !== null && !scenarios.some(item => item.id === id)) issues.form = 'error.missing';
       if (id === null && scenarios.length >= LIMITS.scenarios) issues.form = 'error.scenarioLimit';
       if (Object.keys(issues).length) return { issues };

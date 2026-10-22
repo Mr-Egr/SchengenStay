@@ -39,12 +39,12 @@ try {
   const save = () => page.locator('dialog button[type="submit"]').click();
   const fillDates = async (entry, exit) => { await page.locator('#field-entry').fill(entry); await page.locator('#field-exit').fill(exit); };
 
-  await check('empty dashboard is explicitly a preview, with no computed counts', async () => {
+  await check('empty dashboard requires explicit calculation context', async () => {
     await page.goto(origin);
     await page.waitForSelector('h1');
     assert.equal(await page.locator('.metric.used .metric-value').innerText(), '—');
     assert.equal(await page.locator('.metric.remaining .metric-value').innerText(), '—');
-    assert.match(await page.locator('.session-notice').innerText(), /clears your entries/);
+    assert.match(await page.locator('.session-notice').innerText(), /Memory only by default/);
     assert.equal(await page.locator('.trip-row').count(), 0);
     await page.goto(`${origin}/#__proto__`);
     await page.getByRole('heading', { name: 'Your next chapter starts here.' }).waitFor();
@@ -91,7 +91,7 @@ try {
     assert.equal(await page.locator('dialog').count(), 0);
     assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Add trip');
   });
-  await check('fixed, maximum and earliest scenarios have independent unavailable results', async () => {
+  await check('fixed, maximum and earliest scenarios stay unevaluated until explicitly run', async () => {
     await go('planner');
     for (const mode of ['fixed', 'maximum', 'earliest']) {
       await page.getByRole('button', { name: 'New scenario', exact: true }).first().click();
@@ -108,7 +108,7 @@ try {
       await save();
     }
     assert.equal(await page.locator('.scenario-card').count(), 3);
-    for (const text of await page.locator('.scenario-result').allTextContents()) assert.match(text, /Not evaluated.*No calculation result/s);
+    for (const text of await page.locator('.scenario-result').allTextContents()) assert.match(text, /No calculation to show/);
     await page.getByRole('button', { name: 'Edit: Test fixed', exact: true }).click();
     await page.locator('#field-exit').fill('2027-01-16');
     await save();
@@ -116,12 +116,12 @@ try {
     await go('history');
     assert.equal(await page.locator('.trip-row').count(), 1);
   });
-  await check('calculator date selection shows unavailable or empty states, never results', async () => {
+  await check('calculator date changes invalidate results and show basic date feedback', async () => {
     await go('calculator');
-    assert.equal(await page.getByRole('button', { name: 'Calculation unavailable' }).isDisabled(), true);
+    assert.equal(await page.getByRole('button', { name: 'Check history', exact: true }).isEnabled(), true);
     await page.locator('#field-checkDate').fill('2024-03-02');
     await page.locator('#field-checkDate').blur();
-    assert.equal(await page.locator('[data-computation-state]').getAttribute('data-computation-state'), 'unavailable');
+    assert.equal(await page.locator('[data-computation-state]').getAttribute('data-computation-state'), 'empty');
     await page.locator('#field-checkDate').fill('');
     await page.locator('#field-checkDate').blur();
     assert.equal(await page.locator('[data-computation-state]').getAttribute('data-computation-state'), 'empty');
@@ -186,7 +186,7 @@ try {
         for (const route of ['dashboard', 'history', 'calculator', 'planner', 'calendar', 'settings', 'guide']) {
           await page.evaluate(route => { location.hash = route; }, route);
           await page.waitForFunction(route => document.querySelector('nav [aria-current="page"]').getAttribute('href') === `#${route}`, route);
-          assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${route}/${language}/${width} overflows`);
+          assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${route}/${language}/${width} overflows: ${await page.evaluate(() => [...document.querySelectorAll("main *")].filter(el => el.getBoundingClientRect().right > innerWidth + 1).map(el => el.className || el.tagName).slice(0, 10))}`);
           assert.equal(await page.locator('h1').count(), 1);
           assert.equal(await page.locator('main').count(), 1);
           assert.equal(await page.locator('nav [aria-current="page"]').count(), 1);

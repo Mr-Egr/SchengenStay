@@ -3,8 +3,8 @@
 A travel-planning project with a tested Python day-count engine and a responsive
 web interface for organizing Schengen trips.
 
-**Current status: Stage 4 — frontend preview implemented.**
-The Python engine works independently; browser calculations are not connected yet.
+**Current status: Stage 5 — Python/browser integration implemented.**
+The calculator and planner run the real Python package locally through Pyodide.
 There is no deployed application.
 
 ## The problem
@@ -29,24 +29,27 @@ SchengenStay makes those day counts reproducible through a tested Python library
   and bounded inspections.
 - Unit and property-based tests, plus a GitHub Actions workflow for automated checks.
 - Responsive English/Russian interface with trip editing, tentative scenarios,
-  calendar views, and light/dark themes. Entries exist only in the current tab.
+  calendar views, and light/dark themes. History saving is local and opt-in.
+- Background Python calculations, explicit scope/completeness confirmations,
+  translated explanations, and recoverable loading errors.
 
 The engine operates on dates already identified as countable short stays. Its
 remaining-day figure is a snapshot, not a promise of additional continuous travel.
 
 ## Planned
 
-- Stage 5: connect the Python engine through Pyodide and add optional local storage.
-- Later: integration/release validation and static deployment.
+- Further accessibility, cross-browser and release validation.
+- Separately authorized JSON import/export and static deployment.
 
 See the [roadmap](ROADMAP.md) for the staged implementation plan.
 
 ## Tech stack
 
 **Python 3.12+**, standard-library date arithmetic and immutable data models;
-**HTML, CSS, and vanilla JavaScript ES modules**; **pytest**, **Hypothesis**, and
+**Pyodide 314.0.7**, **HTML, CSS, and vanilla JavaScript ES modules**; **pytest**, **Hypothesis**, and
 **Ruff** for Python checks; Node's built-in frontend tests; **GitHub Actions** for CI.
-No frontend build step, third-party runtime dependencies, or paid services.
+No frontend framework, bundler, backend, or paid services. The Python library has
+no third-party dependencies; the browser downloads the pinned Pyodide runtime.
 
 ## Quick start
 
@@ -63,14 +66,16 @@ python -m venv .venv
 For macOS/Linux setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 For Python examples, see the [planner API](ARCHITECTURE.md#15-stage-3-travel-planner).
 
-Preview the interface locally:
+Run the integrated application locally:
 
 ```powershell
 .\.venv\Scripts\python.exe -m http.server 8765 --bind 127.0.0.1 --directory web
 ```
 
 Open [localhost:8765](http://127.0.0.1:8765). See the [frontend guide](docs/FRONTEND.md)
-for screenshots, checks, working features, and the Stage 5 integration boundary.
+for screenshots, checks, loading troubleshooting, and privacy details. Initial
+Python loading needs internet access. After editing Python, regenerate its static
+archive with `python scripts/build_browser.py`.
 
 ## Documentation
 

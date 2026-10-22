@@ -1,3 +1,5 @@
+import { PythonBridge, LatestResults, calculationRequest } from './pyodide-bridge.js';
+import { createPersistence } from './storage.js';
 import { h, icon, button, announce } from './dom.js';
 import { createStore } from './store.js';
 import { todayISO } from './dates.js';
@@ -5,15 +7,52 @@ import { translator } from './i18n.js';
 import { confirmRemoval, openEditor } from './components.js';
 import * as views from './views.js';
 
-const store = createStore();
 const today = todayISO();
-const state = { language: 'en', theme: 'light', month: today.slice(0, 7), selectedDay: today, checkDate: today };
+const persistence = createPersistence();
+const restored = persistence.load(today);
+const state = { language: restored.data?.language ?? 'en', theme: restored.data?.theme ?? 'light', month: today.slice(0, 7), selectedDay: today, checkDate: today, complete: false, scope: 'UNKNOWN', ongoing: false, budget: 10000, runtime: 'idle', runtimeError: null, storageError: restored.error ?? null };
+const savedTrips = [...(restored.data?.trips ?? [])];
+let restoringId;
+const store = createStore({ planningDate: () => state.checkDate, makeId: () => restoringId ?? crypto.randomUUID() });
+for (const trip of savedTrips) { restoringId = trip.id; store.saveTrip(trip); }
+restoringId = null;
+const results = new LatestResults();
+const bridge = new PythonBridge({ onState: (status, code) => { state.runtime = status; state.runtimeError = code ?? null; render(); } });
+function persist() { if (persistence.enabled) state.storageError = persistence.save(store.trips, state.language, state.theme); }
+function request(method, extra = {}) { return bridge.request(calculationRequest(method, store.trips, state, extra)); }
+function publish(key) {
+  render();
+  const value = results.values.get(key);
+  const t = translator(state.language);
+  if (value?.state === 'ready') {
+    const status = value.result.status;
+    announce(['WITHIN_RULE', 'VIOLATION', 'INVALID_INPUT', 'INSUFFICIENT_DATA', 'OUT_OF_SCOPE', 'HORIZON_LIMIT'].includes(status) ? t(`status.${status}`) : t('result.unknown'));
+  } else if (value?.state === 'error') announce(t('state.error.title'));
+}
+function runHistory() {
+  results.run('usage', () => request('usage_on'), render);
+  results.run('history', () => request('check_history'), () => publish('history'));
+}
+function runScenario(item) {
+  const method = { fixed: 'check_plan', maximum: 'max_continuous_stay', earliest: 'find_earliest_entry' }[item.mode];
+  const extra = item.mode === 'fixed' ? { plan: { entry: item.entry, exit: item.exit } } : item.mode === 'maximum'
+    ? { arrival: item.entry, horizon_days: item.horizon } : { search_start: item.entry, length_days: item.length, horizon_days: item.horizon };
+  results.run(item.id, () => request(method, extra), () => publish(item.id));
+}
+function compareScenarios() {
+  const scenarios = store.scenarios.filter(item => item.mode === 'fixed').map(({ entry, exit }) => ({ entry, exit }));
+  results.run('comparison', () => request('compare_scenarios', { scenarios }), () => publish('comparison'));
+}
+
 const routes = { dashboard: views.dashboard, history: views.history, calculator: views.calculator, planner: views.planner, calendar: views.calendarPage, settings: views.settings, guide: views.guide };
 let menuOpen = false;
 
 function route() { return Object.hasOwn(routes, location.hash.slice(1)) ? location.hash.slice(1) : 'dashboard'; }
 
 function render(focus = false) {
+  const active = document.activeElement;
+  const activeId = active?.id;
+  const activeFocus = active?.dataset.focus;
   const current = route();
   const t = translator(state.language);
   document.documentElement.lang = state.language;
@@ -21,11 +60,17 @@ function render(focus = false) {
   document.title = `${t(`nav.${current}`)} · SchengenStay`;
   document.querySelector('.skip-link').textContent = t('app.skip');
   const ctx = {
-    ...state, today, t, store,
+    ...state, today, t, store, results: results.values, saving: persistence.enabled,
+    busy: [...results.values.values()].some(item => item.state === 'loading'),
+    runHistory, runScenario, compareScenarios,
+    cancelCalculation: () => { results.invalidate(); bridge.cancel(); render(); },
+    retryRuntime: () => { bridge.start().catch(() => {}); },
+    setContext: (key, value) => { state[key] = value; results.invalidate(); render(); document.getElementById(`field-${key}`)?.focus(); },
+    setSaving: enabled => { if (enabled) { persistence.enable(); persist(); } else state.storageError = persistence.disable(); render(); document.getElementById('field-saving')?.focus(); },
     openTrip: item => openEditor(ctx, 'trip', item),
     openScenario: item => openEditor(ctx, 'scenario', item),
     remove: (kind, item) => confirmRemoval(ctx, kind, item),
-    changed: message => { render(); announce(message); },
+    changed: (message, historyChanged = false) => { if (historyChanged) state.ongoing = false; results.invalidate(); persist(); render(); announce(message); },
     showMonth: month => {
       if (!month) return;
       const previous = document.activeElement?.dataset.focus;
@@ -40,12 +85,14 @@ function render(focus = false) {
     },
     setCheckDate: day => {
       state.checkDate = day;
+      state.ongoing = false;
+      results.invalidate();
       render();
       const input = document.getElementById('field-checkDate');
-      input.focus();
+      input?.focus();
     },
-    setLanguage: language => { if (!['en', 'ru'].includes(language)) return; state.language = language; render(); document.getElementById('field-language')?.focus(); },
-    setTheme: theme => { state.theme = theme; render(); document.querySelector(`[data-focus="theme-${theme}"]`)?.focus(); },
+    setLanguage: language => { if (!['en', 'ru'].includes(language)) return; state.language = language; persist(); render(); document.getElementById('field-language')?.focus(); },
+    setTheme: theme => { state.theme = theme; persist(); render(); document.querySelector(`[data-focus="theme-${theme}"]`)?.focus(); },
   };
   const nav = h('nav', { id: 'main-navigation', 'aria-label': t('app.navigation') },
     Object.keys(routes).map(key => h('a', { href: `#${key}`, className: `nav-link ${key === current ? 'active' : ''} ${key === 'settings' ? 'nav-separator' : ''}`, 'aria-current': key === current ? 'page' : null }, icon(key), t(`nav.${key}`), key === current ? h('span', { className: 'active-dot', 'aria-hidden': 'true' }) : null)));
@@ -71,8 +118,12 @@ function render(focus = false) {
     h('div', { className: 'workspace' },
       h('header', { className: 'topbar' }, h('div', { className: 'breadcrumb' }, menuButton, h('span', {}, t('app.workspace')), h('span', { 'aria-hidden': 'true' }, '/'), h('strong', {}, t(`nav.${current}`))),
         h('div', { className: 'topbar-meta' }, h('span', { className: 'session-label' }, icon('shield'), t('app.session')), h('span', { className: 'badge preview' }, t('app.preview')))),
-      h('div', { className: 'session-notice' }, icon('guide'), t('app.notice')), main)));
+      h('div', { className: 'session-notice' }, icon('guide'), t('app.notice'), ' ', t(persistence.enabled ? 'storage.enabled' : 'storage.disabled')), main)));
   if (focus) main.querySelector('h1').focus();
+  else if (active && !active.isConnected) {
+    if (activeId) document.getElementById(activeId)?.focus();
+    else if (activeFocus) document.querySelector(`[data-focus="${CSS.escape(activeFocus)}"]`)?.focus();
+  }
 }
 
 window.addEventListener('hashchange', () => {
