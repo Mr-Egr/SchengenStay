@@ -3,8 +3,8 @@
 A Python project for understanding Schengen short-stay day counts, with a travel
 planning web application planned for later development.
 
-**Current status: Stage 1 complete — Python calculation engine only.** There is
-no web interface, travel planner, or deployed application yet.
+**Current status: Stage 2 — Python arithmetic compliance checking implemented.**
+There is no web interface, travel-planning search, or deployed application yet.
 
 ## The problem
 
@@ -20,6 +20,10 @@ SchengenStay makes those day counts reproducible through a tested Python library
   180-day window.
 - Validation for malformed dates, duplicate records, and overlapping stays.
 - Ongoing-stay calculations using an explicit check date.
+- Full-history and fixed-itinerary checks with first-violation dates, counts,
+  explanation codes, and separate historical results.
+- Explicit outcomes for invalid input, incomplete information, unsupported scope,
+  and bounded inspections.
 - Unit and property-based tests, plus a GitHub Actions workflow for automated checks.
 
 The engine operates on dates already identified as countable short stays. Its
@@ -27,7 +31,6 @@ remaining-day figure is a snapshot, not a promise of additional continuous trave
 
 ## Planned
 
-- History and itinerary compliance checks, including the first violating day.
 - Travel planning: maximum continuous stay and earliest entry searches.
 - An English/Russian browser interface using Pyodide, optional local storage,
   and static deployment.
@@ -53,7 +56,7 @@ python -m venv .venv
 ```
 
 For macOS/Linux setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-For a Python usage example, see the [engine API](ARCHITECTURE.md#current-python-api-and-computation-limits).
+For Python examples, see the [compliance API](ARCHITECTURE.md#14-stage-2-compliance-contract).
 
 ## Documentation
 
@@ -68,5 +71,6 @@ For a Python usage example, see the [engine API](ARCHITECTURE.md#current-python-
 
 SchengenStay is informational and is not an official tool. It does not grant
 permission to enter or stay, assess visa validity, or resolve residence-permit
-and other special legal circumstances. Official example comparison and release
+and other special legal circumstances. Representative published Commission
+examples are covered by tests; live-calculator comparison and broader release
 validation remain outstanding.

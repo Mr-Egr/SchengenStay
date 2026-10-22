@@ -1,9 +1,10 @@
 # Contributing
 
 Read the five supplied requirements documents and the Stage 1 decisions in ARCHITECTURE.md
-before making changes. Work on one authorized roadmap stage at a time. Stage 1
-adds date arithmetic and structured history validation to the Stage 0 scaffold.
-Compliance checking, planning, UI, and deployment remain outside this stage.
+before making changes. Work on one authorized roadmap stage at a time. Stage 2
+adds history and fixed-itinerary arithmetic compliance to the Stage 1 engine.
+Maximum-stay/earliest-entry searches, UI, integration, and deployment remain
+outside this stage. See ARCHITECTURE.md section 14 for the current contract.
 
 ## Local workflow
 
@@ -31,9 +32,10 @@ add any discovered regression as a concrete unit test as well.
   visits separate from actual history.
 - Use synthetic examples in tests; do not commit personal travel or identity data.
 - Consult the official sources linked in CALCULATION_RULES.md and record
-  provenance for independent fixtures. Stage 1 verifies arithmetic against
-  synthetic/manual cases and an independent oracle; it does not establish official
-  example parity or legal eligibility. Never relabel synthetic fixtures as official.
+  provenance for independent fixtures. Stage 2 includes six published Commission
+  arithmetic examples and separately labeled derived boundary cases. This is not
+  exhaustive official parity or legal eligibility. Never relabel synthetic or
+  derived expectations as published official outcomes.
 - Do not add paid services, runtime dependencies without a concrete need,
   server storage, telemetry, or duplicate calculation logic in JavaScript.
 
@@ -93,11 +95,17 @@ src/schengenstay/models.py     completed/ongoing records and usage snapshots
 src/schengenstay/dates.py      parsing, inclusive intervals, unique coverage
 src/schengenstay/validation.py structured validation and overlap detection
 src/schengenstay/calculator.py validated rolling 180-day usage
+src/schengenstay/compliance.py history and fixed-itinerary checks/results
+src/schengenstay/explanations.py scope declarations, reasons, and disclaimer
 tests/test_contracts.py        installation and JSON/status contract checks
 tests/test_dates.py            parsing and calendar boundary tests
 tests/test_validation.py       malformed, duplicate, overlapping history tests
 tests/test_calculator.py       hand-counted snapshot and expiry cases
 tests/test_properties.py       independent oracle and invariants
+tests/test_compliance.py       Stage 2 history, itinerary, status, and limit tests
+tests/test_compliance_properties.py independent daily/budget compliance oracle
+tests/test_official_examples.py published examples and derived boundary tests
+tests/fixtures/official_examples.json source provenance and fixed arithmetic cases
 pyproject.toml                packaging, dependencies, pytest and Ruff settings
 .github/workflows/ci.yml       automated lint/test checks
 .gitignore                    environments, caches and generated files
@@ -108,15 +116,18 @@ PROGRESS.md                    commands, results and remaining work
 The original five requirements documents are preserved. Unit tests cover inclusive
 boundaries, empty/one-day histories, leap/century years, the 90th/91st day, gradual
 expiry, future dates, duplicate coverage, ongoing assumptions, and date extremes.
-Seven deterministic property tests each run 200 generated examples. The fixtures
-are synthetic/manual arithmetic cases, not official compliance examples.
+Eleven deterministic property tests each run 200 passing generated examples.
+Synthetic/manual fixtures remain separate from the published example fixture,
+which records source, retrieval date, pages, and the distinction between stated
+examples and derived boundary expectations. All tests run offline.
 
 The [European Commission calculator page](https://home-affairs.ec.europa.eu/policies/schengen/border-crossing/short-stay-calculator_en)
-was reviewed on 2026-10-22 for the rolling-day principle. Its linked manual URL
-returned HTTP 429 during this work. Official example matching and live calculator
-comparison remain Stage 2/release work, as do full scope handling, browser tests,
-and release gates. No license has been selected; choose one before public
+was reviewed on 2026-10-22 for the rolling-day principle. The original manual URL
+failed during earlier work and returned HTTP 404 in Stage 2; an accessible official
+copy supplied the six cases now tested. See CALCULATION_RULES.md section 10 for
+the source. Live calculator comparison, broader reference coverage, browser tests,
+and release gates remain open. No license has been selected; choose one before public
 distribution rather than assuming licensing terms on the owner's behalf.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 2 remains the
+See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 3 remains the
 next implementation stage; agree its scope before starting new features.

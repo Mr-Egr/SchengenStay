@@ -1,5 +1,91 @@
 # Progress record
 
+## 2026-10-22 — Stage 2 arithmetic compliance
+
+Started from clean local `main` and `origin/main` at `25dd106`. Implemented Stage 2
+only: history compliance and the roadmap's fixed prospective-itinerary check.
+No Stage 3 date/duration searches, UI, Pyodide bridge, persistence, or deployment.
+No dependencies were added and the six-status contract remains unchanged.
+
+### Implemented behavior and files
+
+- Added `src/schengenstay/compliance.py`: frozen CheckResult/PlanResult, structured
+  preflight outcomes, full occupied-history scanning, first-violation evidence,
+  separate check-date snapshot, fixed-itinerary checking, and inspection limits.
+- Added `src/schengenstay/explanations.py`: declared calculation scopes, stable
+  reasons, and scope/disclaimer text. No legal grounds are adjudicated or inferred.
+- Updated `calculator.py` to share already-validated interval/snapshot helpers
+  while preserving `usage_on()` behavior; updated `models.py` with a separate
+  PlannedStay type, `validation.py` with request/plan issue codes, and package
+  exports and contract documentation in `__init__.py` and `contracts.py`.
+- Added `tests/test_compliance.py`, `tests/test_compliance_properties.py`,
+  `tests/test_official_examples.py`, and `tests/fixtures/official_examples.json`.
+  Existing Stage 0/1 tests were left intact.
+- Updated ARCHITECTURE.md (section 14), CALCULATION_RULES.md (source verification),
+  CONTRIBUTING.md, and the concise README. This PROGRESS.md entry records outcomes.
+
+History checks scan every supplied occupied day through the explicit check date
+in chronological order, stopping once the earliest violation is proven. Historical
+violations survive later expiry from the final-date window. Valid recorded future
+dates are clipped with a warning; malformed/overlapping records still invalidate
+the input. Ongoing history requires an explicit cutoff and records the assumption.
+
+Scope and history completeness are caller declarations: the default API assumes
+complete, already-identified countable short stays. Unknown/incomplete data returns
+INSUFFICIENT_DATA; requests for special legal contexts, visa validity, or historical
+geography return OUT_OF_SCOPE. Malformed requests return INVALID_INPUT with field
+issues. No result grants permission to enter or stay.
+
+Fixed itineraries remain separate from actual history and are checked day by day.
+The combined result cannot hide a historical violation behind a passing future
+itinerary. Actual records must end by the explicit `as_of`, and ongoing records
+need an actual exit before a future itinerary can be checked. No additional travel
+between supplied history and the proposal is assumed, and that assumption is
+reported. No input record is modified or persisted.
+
+The existing 500-record limit remains. Compliance entry dates must permit a full
+180-day window (at least `0001-06-29`). Each scan permits 1-10,000 occupied dates,
+10,000 by default; incomplete scans return HORIZON_LIMIT, not WITHIN_RULE. Empty
+calendar gaps do not consume this budget. See ARCHITECTURE.md for precise result
+field semantics, status precedence, and the distinction from Stage 1 endpoints.
+
+### Tests and official reference comparison
+
+Wrote failing tests before implementation: two expected import/collection errors.
+The first implementation run had 179 passes and one incorrect test expectation:
+continuing a stay added a day as an old day expired, so the expected usage should
+not have decreased. Replaced that fixture with a manually counted itinerary whose
+first failure occurs on an interior day. Corrected two lint issues, then added
+reference fixtures, remaining edge cases, and a scan-budget property.
+
+The original Commission document/download URL returned HTTP 404 in this run.
+Located an accessible [official manual](https://ec.europa.eu/assets/home/visa-calculator/docs/short_stay_schengen_calculator_user_manual_en.pdf),
+section 6, printed pages 5-7, using 2024 dates. Six published arithmetic cases
+match: two history snapshots and four fixed intervals based on published arrival
+dates and durations. Five additional boundary regressions are explicitly labeled
+as derived, not quoted official outcomes. Source URL, retrieval date, section,
+pages, inputs, and the verification scope are preserved in the fixture. These
+checks do not certify visa eligibility or implement a duration-search algorithm.
+The live calculator was not exercised; broader official parity remains pending.
+
+Final local checks on Python 3.12.14:
+
+| Command/check | Result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q --hypothesis-show-statistics` | 197 passed in 4.29 seconds |
+| Property testing | 11 properties reached 200 passing examples each: 2,200 total, including 800 Stage 2 examples |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found |
+| Documentation links and anchors | Passed |
+| Stage 1 and Stage 2 Python examples in ARCHITECTURE.md | Executed successfully |
+| `git diff --check` | No whitespace errors |
+
+Remaining limitations: caller-supplied scope/completeness cannot be independently
+verified; live calculator comparison, broader release/reference checks, and future
+browser validation remain open. Stage 0 licensing/build-lock decisions remain
+unresolved. No remote CI success is claimed by these local results. Stop for
+review after the single Stage 2 commit/push; further stages require a new request.
+
 ## 2026-10-22 — Project overview documentation
 
 Rewrote README.md as a concise English project overview for recruiters and

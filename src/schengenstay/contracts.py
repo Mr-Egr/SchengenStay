@@ -1,4 +1,4 @@
-"""Reserved compliance-result vocabulary; Stage 1 usage snapshots do not emit it."""
+"""Six-status arithmetic compliance contract; standalone usage snapshots omit status."""
 
 from enum import StrEnum
 
@@ -6,7 +6,7 @@ from enum import StrEnum
 class ResultStatus(StrEnum):
     """Result codes from CALCULATION_RULES.md, section 7.
 
-    WITHIN_RULE will describe supported arithmetic only, never permission to travel.
+    WITHIN_RULE describes supported arithmetic only, never permission to travel.
     """
 
     WITHIN_RULE = "WITHIN_RULE"

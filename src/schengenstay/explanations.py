@@ -1,0 +1,43 @@
+"""Language-neutral scope declarations and reasons, not legal adjudication."""
+
+from enum import StrEnum
+
+
+class CalculationScope(StrEnum):
+    """Caller-declared request scope; no inference from nationality or free text."""
+
+    COUNTABLE_SHORT_STAYS = "COUNTABLE_SHORT_STAYS"
+    UNKNOWN = "UNKNOWN"
+    SPECIAL_LEGAL_CONTEXT = "SPECIAL_LEGAL_CONTEXT"
+    VISA_VALIDITY = "VISA_VALIDITY"
+    HISTORICAL_GEOGRAPHY = "HISTORICAL_GEOGRAPHY"
+
+
+class ReasonCode(StrEnum):
+    NO_VIOLATION_FOUND = "NO_VIOLATION_FOUND"
+    ROLLING_LIMIT_EXCEEDED = "ROLLING_LIMIT_EXCEEDED"
+    INVALID_REQUEST = "INVALID_REQUEST"
+    INVALID_HISTORY = "INVALID_HISTORY"
+    CHECK_DATE_REQUIRED = "CHECK_DATE_REQUIRED"
+    HISTORY_REQUIRED = "HISTORY_REQUIRED"
+    HISTORY_INCOMPLETE = "HISTORY_INCOMPLETE"
+    COUNTABILITY_UNKNOWN = "COUNTABILITY_UNKNOWN"
+    UNSUPPORTED_SCOPE = "UNSUPPORTED_SCOPE"
+    HISTORY_DATE_RANGE_UNSUPPORTED = "HISTORY_DATE_RANGE_UNSUPPORTED"
+    INSPECTION_LIMIT_REACHED = "INSPECTION_LIMIT_REACHED"
+    FUTURE_DATES_IGNORED = "FUTURE_DATES_IGNORED"
+    ONGOING_ASSUMED_THROUGH_CHECK_DATE = "ONGOING_ASSUMED_THROUGH_CHECK_DATE"
+    PLAN_REQUIRED = "PLAN_REQUIRED"
+    ONGOING_EXIT_REQUIRED = "ONGOING_EXIT_REQUIRED"
+    HISTORICAL_VIOLATION = "HISTORICAL_VIOLATION"
+    ITINERARY_VIOLATION = "ITINERARY_VIOLATION"
+    NO_ADDITIONAL_TRAVEL_ASSUMED = "NO_ADDITIONAL_TRAVEL_ASSUMED"
+
+
+SCOPE_NOTES = (
+    "Calculation checks only the standard rolling 90/180 short-stay rule; "
+    "it is not permission to enter or stay.",
+    "Results rely on caller-identified countable dates and complete supplied history; "
+    "visas, residence permits, nationality, and special legal grounds are not adjudicated.",
+    "Arithmetic remaining on a date is not a promise of additional continuous travel.",
+)

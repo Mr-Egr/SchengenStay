@@ -111,3 +111,15 @@ Use explicit error reasons that are easy to translate.
 - https://home-affairs.ec.europa.eu/policies/schengen/border-crossing/short-stay-calculator_en
 - https://home-affairs.ec.europa.eu/document/download/c6b8be91-871c-4e5a-bf11-d260d4488020_en?filename=short_stay_schengen_calculator_user_manual_en.pdf
 - https://www.consilium.europa.eu/en/policies/schengen-area/
+
+### Stage 2 reference verification (2026-10-22)
+
+The document/download manual URL above returned HTTP 404 during Stage 2 work.
+An accessible [Commission-hosted manual](https://ec.europa.eu/assets/home/visa-calculator/docs/short_stay_schengen_calculator_user_manual_en.pdf)
+contains section 6 examples on printed pages 5-7 using 2024 dates. Six published
+arithmetic cases are encoded in `tests/fixtures/official_examples.json`: two
+history snapshots and four fixed intervals derived from stated arrival dates and
+durations. Five additional regression cases derive the next-day/first-violation
+boundaries; those expectations are not represented as quoted official results.
+The tests do not adjudicate the examples' visa circumstances. No live-calculator
+comparison has been performed; broader reference coverage remains a release task.

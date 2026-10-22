@@ -1,9 +1,10 @@
 # SchengenStay — Technical Architecture
 
 > Sections 1-12 describe the planned V1 architecture, including features that
-> are not implemented yet. For the current Stage 1 contract, API, and limits,
-> see [section 13](#13-implemented-stage-1-engine). The browser interface,
-> planning algorithms, and deployment remain planned work.
+> are not implemented yet. The implemented date engine is documented in
+> [section 13](#13-implemented-stage-1-engine), and the Stage 2 compliance contract
+> in [section 14](#14-stage-2-compliance-contract). The browser interface,
+> maximum-stay/earliest-entry searches, and deployment remain planned work.
 
 ## 1. Architectural goals
 
@@ -163,8 +164,9 @@ The supplied requirements remain in the repository root. Read
 with [README_START_HERE.md](README_START_HERE.md).
 
 1. **Stage boundary:** Stage 1 adds date models/helpers, validation, normalized
-   intervals, and `usage_on()`. `check_history()`, compliance verdicts,
-   first-violation reporting, planning, and all browser work remain deferred.
+   intervals, and `usage_on()`. Stage 2 adds `check_history()` and fixed-itinerary
+   `check_plan()` with first-violation reporting (section 14). Search algorithms
+   and all browser work remain deferred.
 2. **Canonical status vocabulary:** `CALCULATION_RULES.md` section 7 is the public
    result contract. PRODUCT.md also uses `VALID_FOR_RULE` and
    `WITHIN_90_180_RULE`; these are not additional API statuses. The supported
@@ -181,7 +183,7 @@ with [README_START_HERE.md](README_START_HERE.md).
    `[day - 179 days, day]`. Snapshot remaining days are not a promise of a future
    continuous stay. Flag overlaps while ensuring low-level arithmetic never
    double-counts dates. Checking every proposed day and reporting past violations
-   separately belong to Stage 2.
+   separately are implemented in Stage 2.
 6. **Architecture:** calculations use pure Python with no network or
    clock-dependent behavior. Later stages will add static HTML/CSS/vanilla JS and
    pinned Pyodide. No backend, database, accounts, telemetry, or paid APIs.
@@ -189,7 +191,7 @@ with [README_START_HERE.md](README_START_HERE.md).
    on the device; planned travel remains separate from actual travel. JSON import
    limits and schema validation belong to later implementation stages.
 
-| Status | Intended meaning once calculation features exist |
+| Status | Arithmetic result meaning |
 | --- | --- |
 | `WITHIN_RULE` | Supported itinerary satisfies the arithmetic being evaluated |
 | `VIOLATION` | Evaluated rolling-day count exceeds the rule |
@@ -198,9 +200,10 @@ with [README_START_HERE.md](README_START_HERE.md).
 | `OUT_OF_SCOPE` | Requested legal context or scenario is unsupported |
 | `HORIZON_LIMIT` | A bounded computation reached its search limit |
 
-The enum reserves compliance-result names for Stage 2. Stage 1 `UsageResult`
+The enum is used by Stage 2 compliance results. Stage 1 `UsageResult`
 contains numbers, dates, scope notes, and any ongoing-stay assumption, but no
-compliance status. Future status precedence and planning limits remain undecided.
+compliance status. Stage 2 precedence and inspection limits are specified below;
+Stage 3 search limits remain undecided.
 
 ### Current Python API and computation limits
 
@@ -252,3 +255,142 @@ inclusive lengths: O(n log n) time and O(n) memory for n intervals. It never
 expands a multi-year stay into millions of dates. Hypothesis tests compare this
 with a separate enumerating oracle, including overlaps, input permutations,
 normalization, and calendar boundaries.
+
+## 14. Stage 2 compliance contract
+
+`compliance.py` reuses the Stage 1 validators, interval normalization, rolling
+windows, and usage calculation. `explanations.py` defines scope and reason enums.
+No visa, residence-permit, nationality, or country-membership decision is made.
+The six `ResultStatus` values are unchanged.
+
+### APIs and scope declarations
+
+```python
+from datetime import date
+from schengenstay import (
+    CalculationScope, PlannedStay, ResultStatus, ShortStay,
+    check_history, check_plan,
+)
+
+history = [ShortStay("actual-1", date(2024, 1, 1), date(2024, 3, 31))]
+result = check_history(history, as_of=date(2024, 12, 31))
+assert result.status is ResultStatus.VIOLATION
+assert result.first_violation_date == date(2024, 3, 31)
+assert result.used_days == result.violation_count == 91
+assert result.snapshot.used_days == 0  # A later empty window cannot erase the violation.
+
+proposed = PlannedStay(date(2025, 1, 1), date(2025, 1, 2))
+combined = check_plan(history, proposed, as_of=date(2024, 12, 31))
+assert combined.history_result.status is ResultStatus.VIOLATION
+assert combined.itinerary_result.status is ResultStatus.WITHIN_RULE
+assert combined.status is ResultStatus.VIOLATION
+
+unknown = check_history([], date(2024, 12, 31), scope=CalculationScope.UNKNOWN)
+assert unknown.status is ResultStatus.INSUFFICIENT_DATA
+```
+
+Both APIs accept `scope`, `history_complete`, and `max_inspected_days` keyword
+arguments. `check_plan()` also requires an explicit `as_of` for actual history;
+it never substitutes the proposed arrival or the current date for that cutoff.
+
+- The default `scope=CalculationScope.COUNTABLE_SHORT_STAYS` and
+  `history_complete=True` declare that the caller has supplied complete,
+  already-identified countable short-stay history. They are API assumptions, not
+  facts the program can independently establish. An empty sequence means no
+  countable travel is reported; `None` means the history is missing.
+- Use `scope=UNKNOWN` (or `None`) when countability is unknown, and
+  `history_complete=False` (or `None`) when history is incomplete. No affirmative
+  result is computed in these cases. Strings are not implicitly converted to enums.
+- `SPECIAL_LEGAL_CONTEXT` covers requests involving residence permits, D visas,
+  pending applications, extensions, bilateral arrangements, or other special
+  grounds. `VISA_VALIDITY` and `HISTORICAL_GEOGRAPHY` identify other unsupported
+  requests. All return `OUT_OF_SCOPE`; none attempts to infer which days to omit.
+- Notes and nationality are never used to infer scope. A future caller/UI must
+  obtain the scope declaration instead of treating arbitrary legal records as
+  countable short stays.
+
+### What is inspected
+
+`check_history()` validates the entire supplied history first, then clips coverage
+to `as_of`. It examines occupied dates chronologically from the earliest supplied
+entry, including trips outside the final 180-day window. It skips unoccupied gaps
+because no new occupied day can increase usage during them. Each inspected day
+uses its own inclusive `[day - 179, day]` window. Scanning stops once the earliest
+violation is proven; subsequent days cannot change that first violation.
+
+Valid recorded dates after `as_of` are excluded and reported with
+`FUTURE_DATES_IGNORED`. Malformed/overlapping future records still invalidate the
+request. An `OngoingStay` assumes presence through the explicit `as_of`, retains
+no fabricated exit, and produces `ONGOING_ASSUMED_THROUGH_CHECK_DATE` plus IDs in
+the snapshot's `assumed_ongoing_ids`. PlannedStay objects cannot enter history.
+
+`check_plan()` tests only a fixed proposed interval, not a search for dates or
+duration. Actual completed records must all end by `as_of`; the proposed entry
+must be later than `as_of`. Ongoing records return `INSUFFICIENT_DATA` with
+`ONGOING_EXIT_REQUIRED` until their actual exit is known. This prevents silently
+inventing an exit and assuming a gap before planned travel. No additional travel
+between supplied actual history and the proposal is assumed; this is reported in
+the itinerary's warnings. Neither the input history nor the proposal is mutated.
+
+History is checked separately first. A historical violation remains visible even
+if the later itinerary passes. When history cannot be evaluated (invalid, missing,
+unsupported, or inspection-limited), no itinerary success is produced.
+
+### Results and reasons
+
+`CheckResult` and `PlanResult` are frozen dataclasses exported at package level.
+
+- `CheckResult.snapshot` is usage on the requested date; `first_violation` is a
+  separate usage snapshot on the earliest violating date. Convenience properties
+  `used_days`, `window_start`, `window_end`, and `remaining_arithmetic_days` refer
+  to the first violation when present, otherwise the selected-date snapshot.
+  `first_violation_date` and `violation_count` are absent when no failure was found.
+- `inspected_dates` is a count of occupied dates actually inspected, not a list or
+  the elapsed calendar span. `inspected_through` is the last inspected date.
+- `reason_codes` and `warnings` use `ReasonCode`; `human_explanation_keys` maps
+  them to stable `compliance.<lowercase_code>` keys. `issues` retains structured
+  field-level `ValidationIssue` objects. All results retain the scope disclaimer.
+- Invalid, unsupported, and insufficient-data history results contain no numerical
+  snapshot or violation evidence. A budget-limited result may expose its exact
+  final-date snapshot while explicitly declining an all-history passing verdict.
+- `PlanResult.history_result` and `itinerary_result` expose each assessment. Its
+  top-level status is `VIOLATION` if either has a proven violation, otherwise the
+  itinerary status. Its reasons distinguish `HISTORICAL_VIOLATION` from
+  `ITINERARY_VIOLATION`; no plan is promoted into actual history.
+
+History preflight precedence is invalid request/history, unsupported scope, missing
+information, then arithmetic. Plan shape/date errors are also checked before any
+arithmetic, and plan/history chronology is checked after the shared preflight.
+
+| Status | Representative reasons / interpretation |
+| --- | --- |
+| `WITHIN_RULE` | `NO_VIOLATION_FOUND`: all required occupied dates were inspected within the supplied scope |
+| `VIOLATION` | `ROLLING_LIMIT_EXCEEDED`: first usage above 90, with its date and window |
+| `INVALID_INPUT` | `INVALID_REQUEST` or `INVALID_HISTORY`: malformed types/dates/options, overlaps, duplicate IDs, or contradictory plan/history dates |
+| `INSUFFICIENT_DATA` | `CHECK_DATE_REQUIRED`, `HISTORY_REQUIRED`, `HISTORY_INCOMPLETE`, `COUNTABILITY_UNKNOWN`, `PLAN_REQUIRED`, or `ONGOING_EXIT_REQUIRED` |
+| `OUT_OF_SCOPE` | `UNSUPPORTED_SCOPE` or `HISTORY_DATE_RANGE_UNSUPPORTED` |
+| `HORIZON_LIMIT` | `INSPECTION_LIMIT_REACHED`: incomplete scan; never equivalent to `WITHIN_RULE` |
+
+### Bounds and verification
+
+The existing 500-record history limit remains. History compliance requires all
+supplied entry dates to be at least `0001-06-29`, so every inspected day has a full
+representable window. Earlier valid calendar entries yield `OUT_OF_SCOPE`, whereas
+an invalid check-date range yields `INVALID_INPUT`. Stage 1 snapshot arithmetic
+retains its wider endpoint support. These are computational bounds only.
+
+Each history/itinerary scan permits 1 through 10,000 occupied days (10,000 by
+default). A supplied budget must be an integer, not a boolean. Exact completion
+at the limit can pass; a proven violation at the limit takes precedence over
+exhaustion. Long empty gaps do not consume this budget. Iteration uses ordinals to
+include `date.max` safely. History and fixed-itinerary scans have separate budgets.
+Worst-case work is O(k n log n), using existing interval counts for k inspected
+days and n records, with O(n) working storage; a definite violation stops early.
+
+Tests compare the daily scan and budget outcomes against independent occupied-date
+sets, plus calendar boundaries, malformed inputs, history/order invariance,
+historical violations after expiry, and separate itinerary results. Published
+Commission arithmetic examples and their exact source/version are recorded in
+`tests/fixtures/official_examples.json` and tested offline. Derived next-day
+boundaries are labeled separately. Live calculator comparison, broader official
+coverage, legal-source review for release, and browser work remain outstanding.

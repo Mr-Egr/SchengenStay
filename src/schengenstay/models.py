@@ -1,4 +1,4 @@
-"""Immutable Stage 1 inputs and arithmetic output, not legal-status models."""
+"""Immutable date inputs and arithmetic snapshots, not legal-status models."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -27,6 +27,14 @@ class OngoingStay:
 
 
 type HistoryStay = ShortStay | OngoingStay
+
+
+@dataclass(frozen=True, slots=True)
+class PlannedStay:
+    """A proposed interval, never accepted as actual history or persisted by checking."""
+
+    entry: date
+    exit: date
 
 
 @dataclass(frozen=True, slots=True)

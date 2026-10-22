@@ -1,0 +1,70 @@
+{
+  "source_url": "https://ec.europa.eu/assets/home/visa-calculator/docs/short_stay_schengen_calculator_user_manual_en.pdf",
+  "retrieved_on": "2026-10-22",
+  "source_section": "6. Examples, printed pages 5-7; 2024 dates in this version",
+  "verification_scope": "Published arithmetic examples only. No live calculator run or visa entitlement verification. End dates for duration examples are derived inclusively from published entry dates and lengths. Next-day failures are derived regressions, not quoted official results.",
+  "history_stays": [
+    [
+      "2024-01-01",
+      "2024-01-01"
+    ],
+    [
+      "2024-06-01",
+      "2024-09-20"
+    ]
+  ],
+  "history_cases": [
+    {
+      "as_of": "2024-06-14",
+      "window_start": "2023-12-18",
+      "used_days": 15,
+      "status": "WITHIN_RULE"
+    },
+    {
+      "as_of": "2024-08-29",
+      "window_start": "2024-03-03",
+      "used_days": 90,
+      "status": "WITHIN_RULE"
+    }
+  ],
+  "planning_history": [
+    [
+      "2024-01-01",
+      "2024-01-10"
+    ],
+    [
+      "2024-03-01",
+      "2024-03-30"
+    ],
+    [
+      "2024-05-01",
+      "2024-06-09"
+    ]
+  ],
+  "fixed_itineraries": [
+    {
+      "entry": "2024-06-19",
+      "exit": "2024-07-08",
+      "published_length": 20,
+      "source_page": 6
+    },
+    {
+      "entry": "2024-08-07",
+      "exit": "2024-08-26",
+      "published_length": 20,
+      "source_page": 6
+    },
+    {
+      "entry": "2024-08-08",
+      "exit": "2024-09-26",
+      "published_length": 50,
+      "source_page": 7
+    },
+    {
+      "entry": "2024-09-08",
+      "exit": "2024-12-06",
+      "published_length": 90,
+      "source_page": 7
+    }
+  ]
+}

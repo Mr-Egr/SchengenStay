@@ -1,4 +1,4 @@
-"""Single-date usage arithmetic only; compliance and planning belong to later stages."""
+"""Single-date usage arithmetic shared by snapshots and compliance checking."""
 
 from collections.abc import Sequence
 from datetime import date
@@ -18,15 +18,33 @@ def usage_on(stays: Sequence[HistoryStay], day: date) -> UsageResult:
     Ongoing stays are assumed present through the explicit day, recorded in the
     result's assumed_ongoing_ids. The caller's records are never altered.
     """
-    window = rolling_window(day)
+    rolling_window(day)  # Preserve Stage 1 check-date validation before history validation.
     issues = validate_history(stays, as_of=day)
     if issues:
         raise HistoryValidationError(issues)
 
-    intervals = [
+    return _usage_from_intervals(
+        _history_intervals(stays, day),
+        day,
+        tuple(sorted(stay.id for stay in stays if isinstance(stay, OngoingStay))),
+    )
+
+
+def _history_intervals(stays: Sequence[HistoryStay], day: date) -> tuple[DateInterval, ...]:
+    """Resolve already-validated records, without altering ongoing inputs."""
+    return tuple(
         DateInterval(stay.entry, day if isinstance(stay, OngoingStay) else stay.exit)
         for stay in stays
-    ]
+    )
+
+
+def _usage_from_intervals(
+    intervals: Sequence[DateInterval],
+    day: date,
+    ongoing_ids: tuple[str, ...] = (),
+) -> UsageResult:
+    """Reuse the same window/count/snapshot calculation after one-time validation."""
+    window = rolling_window(day)
     used = count_occupied_days(intervals, window)
     return UsageResult(
         check_date=day,
@@ -34,7 +52,5 @@ def usage_on(stays: Sequence[HistoryStay], day: date) -> UsageResult:
         window_end=window.end,
         used_days=used,
         remaining_arithmetic_days=max(0, SHORT_STAY_DAYS - used),
-        assumed_ongoing_ids=tuple(
-            sorted(stay.id for stay in stays if isinstance(stay, OngoingStay))
-        ),
+        assumed_ongoing_ids=ongoing_ids,
     )
