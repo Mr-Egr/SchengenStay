@@ -5,6 +5,15 @@ from schengenstay.compliance import CheckResult, PlanResult, check_history, chec
 from schengenstay.contracts import ResultStatus
 from schengenstay.explanations import CalculationScope, ReasonCode
 from schengenstay.models import OngoingStay, PlannedStay, ShortStay, UsageResult
+from schengenstay.planner import (
+    ComparisonResult,
+    EntrySearchResult,
+    MaxStayResult,
+    ScenarioResult,
+    compare_scenarios,
+    find_earliest_entry,
+    max_continuous_stay,
+)
 from schengenstay.validation import (
     HistoryValidationError,
     IssueCode,
@@ -15,6 +24,10 @@ from schengenstay.validation import (
 __all__ = [
     "CalculationScope",
     "CheckResult",
+    "ComparisonResult",
+    "EntrySearchResult",
+    "MaxStayResult",
+    "ScenarioResult",
     "HistoryValidationError",
     "IssueCode",
     "OngoingStay",
@@ -27,6 +40,9 @@ __all__ = [
     "ValidationIssue",
     "check_history",
     "check_plan",
+    "compare_scenarios",
+    "find_earliest_entry",
+    "max_continuous_stay",
     "usage_on",
     "validate_history",
 ]

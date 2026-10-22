@@ -6,7 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from schengenstay import PlannedStay, ResultStatus, ShortStay, check_history, check_plan
+from schengenstay import (
+    PlannedStay,
+    ResultStatus,
+    ShortStay,
+    check_history,
+    check_plan,
+    find_earliest_entry,
+    max_continuous_stay,
+)
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "official_examples.json").read_text())
 
@@ -54,3 +62,31 @@ def test_derived_first_violation_for_published_history():
     assert result.first_violation_date == date(2024, 8, 30)
     assert result.violation_count == 91
     assert result.snapshot.used_days == 112
+
+
+@pytest.mark.parametrize("case", FIXTURE["fixed_itineraries"])
+def test_maximum_search_matches_published_durations(case):
+    result = max_continuous_stay(
+        records("planning_history"),
+        date.fromisoformat(case["entry"]),
+        91,
+        as_of=date(2024, 6, 9),
+    )
+    assert result.status is ResultStatus.WITHIN_RULE
+    assert result.maximum_proven
+    assert result.consecutive_days == case["published_length"]
+    assert result.latest_compliant_exit == date.fromisoformat(case["exit"])
+
+
+def test_derived_earliest_50_day_entry_between_two_published_examples():
+    # The manual's Aug 7 and Aug 8 durations are 20 and 50; the search assertion
+    # is derived from those adjacent cases, not a quoted official search result.
+    result = find_earliest_entry(
+        records("planning_history"),
+        50,
+        date(2024, 8, 7),
+        2,
+        as_of=date(2024, 6, 9),
+    )
+    assert result.entry == date(2024, 8, 8)
+    assert result.exit == date(2024, 9, 26)

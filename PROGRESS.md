@@ -1,5 +1,81 @@
 # Progress record
 
+## 2026-10-22 — Stage 3 travel planner
+
+Started from clean `main` and `origin/main` at `f53156b`. Read the product, rules,
+architecture, roadmap, and progress documents and inspected Stage 1/2 source and
+tests before changes. Implemented only the authorized pure-Python planner. The
+user explicitly included scenario comparison, bringing its Python portion forward
+from the original post-V1 scope. No UI, Pyodide, persistence, visa adjudication,
+deployment, or new dependencies were added.
+
+### Implementation and files
+
+- Added `src/schengenstay/planner.py`: `max_continuous_stay()`,
+  `find_earliest_entry()`, `compare_scenarios()`, frozen result models, strict
+  bounds, explanation codes, and independently visible history/search outcomes.
+- Updated `compliance.py` to extract its existing validated itinerary evaluator
+  for reuse after the first `check_plan()` call. Earliest-entry search checks
+  history once and reuses that evidence. Fixed-trip behavior is unchanged.
+- Updated `explanations.py` with six planner reason codes and `__init__.py` with
+  public function/result exports. The six top-level statuses remain unchanged.
+- Added `tests/test_planner.py` and `tests/test_planner_properties.py`; extended
+  `tests/test_official_examples.py` with maximum-duration comparisons and one
+  explicitly derived earliest-entry regression. All original tests remain.
+- Updated ARCHITECTURE.md section 15, CALCULATION_RULES.md, ROADMAP.md,
+  CONTRIBUTING.md, the concise README, and this PROGRESS.md record.
+
+Maximum search checks each proposed day until the first failure or bound. It
+returns a proven maximum, a zero-day failed arrival, or a clearly labeled partial
+compliant prefix. Earliest-entry search tests full trips in candidate order and
+shares an inspection budget across candidates; it cannot skip an uncertain
+candidate and claim a later one is earliest. No result within the horizon is
+distinct from the arithmetic proof that over-90-day continuous countable trips
+cannot fit this rule. Known historical violations remain visible independently
+of future search results, including when a future search is incomplete.
+
+Actual history, ongoing stays, and proposals stay separate. Ongoing history still
+requires a confirmed actual exit before planning. Invalid, incomplete, unsupported,
+and inspection-limited contexts propagate without an affirmative search verdict.
+All bounds, aggregate precedence, first-failure evidence, prefix semantics,
+algorithmic complexity, and executable examples are documented in section 15.
+Every result remains informational arithmetic, never permission to enter or stay.
+
+### Verification actually performed
+
+Added behavior tests before implementing planner functions; the initial targeted
+run failed with the expected missing-export collection error. After implementation,
+116 targeted planner/compliance cases passed. Added independent exhaustive-oracle
+properties, published-duration search cases, budget/calendar/input regressions,
+and documentation. No test failures remain.
+
+Final local checks on Python 3.12.14:
+
+| Command/check | Result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q --hypothesis-show-statistics` | 267 passed in 7.04 seconds, including all 197 existing cases |
+| Property testing | 15 properties reached 200 passing examples each: 3,000 total, including 800 planner examples |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found; dependencies unchanged |
+| Local documentation links/anchors | 19 checked, all passed |
+| Executable API examples in ARCHITECTURE.md | All 3 passed |
+| `git diff --check` | No whitespace errors |
+| Remote-history check before commit | `origin/main` still at `f53156bae02d5cca0fa87e729e913d9ca5377382` |
+
+Maximum searches reproduce the four published Commission duration cases already
+recorded in the offline fixture. The new earliest-entry case is derived from two
+adjacent published arrival/duration cases; it is not labeled a published search
+answer. The source was not newly retrieved and the live calculator was not used.
+Broader official parity and live comparison remain pending. Hypothesis reports
+discarded generated candidates separately; all 3,000 accepted examples passed.
+
+Remaining limitations: user-declared countability/completeness cannot be verified;
+finite horizons/inspection budgets can return incomplete searches; ongoing-stay
+planning requires actual exit information; no legal or visa authorization is
+assessed. Earlier license and full dependency-lock decisions remain open. Local
+checks do not establish remote CI success. Stage 3 stops for review after its
+single commit/push; no later-stage implementation is authorized by this record.
+
 ## 2026-10-22 — Stage 2 arithmetic compliance
 
 Started from clean local `main` and `origin/main` at `25dd106`. Implemented Stage 2

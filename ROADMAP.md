@@ -26,6 +26,12 @@
 
 **Done when:** all planning tests pass, including windows losing old days, no feasible arrival within horizon, and infeasible initial proposed arrivals.
 
+**Implemented scope:** maximum-stay and earliest-entry searches, with bounded
+inspection work and structured results. The user's Stage 3 request also brings
+pure-Python comparison of independent hypothetical trips forward from Stage 9;
+comparison UI and saved scenarios remain deferred. See ARCHITECTURE.md section 15
+and PROGRESS.md for exact contracts and verification results.
+
 ## Stage 4 — Browser + Python bridge
 
 **Tasks:** pin Pyodide version; load locally packaged pure Python core in browser; implement fixed JSON API; error/loading states; no user code execution. Use Web Worker if supported and stable.

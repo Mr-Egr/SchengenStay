@@ -3,8 +3,8 @@
 A Python project for understanding Schengen short-stay day counts, with a travel
 planning web application planned for later development.
 
-**Current status: Stage 2 — Python arithmetic compliance checking implemented.**
-There is no web interface, travel-planning search, or deployed application yet.
+**Current status: Stage 3 — pure-Python travel planner implemented.**
+There is no web interface or deployed application yet.
 
 ## The problem
 
@@ -22,6 +22,8 @@ SchengenStay makes those day counts reproducible through a tested Python library
 - Ongoing-stay calculations using an explicit check date.
 - Full-history and fixed-itinerary checks with first-violation dates, counts,
   explanation codes, and separate historical results.
+- Bounded maximum-stay and earliest-entry searches, plus independent comparison
+  of hypothetical trips without changing actual history.
 - Explicit outcomes for invalid input, incomplete information, unsupported scope,
   and bounded inspections.
 - Unit and property-based tests, plus a GitHub Actions workflow for automated checks.
@@ -31,7 +33,6 @@ remaining-day figure is a snapshot, not a promise of additional continuous trave
 
 ## Planned
 
-- Travel planning: maximum continuous stay and earliest entry searches.
 - An English/Russian browser interface using Pyodide, optional local storage,
   and static deployment.
 
@@ -56,7 +57,7 @@ python -m venv .venv
 ```
 
 For macOS/Linux setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-For Python examples, see the [compliance API](ARCHITECTURE.md#14-stage-2-compliance-contract).
+For Python examples, see the [planner API](ARCHITECTURE.md#15-stage-3-travel-planner).
 
 ## Documentation
 

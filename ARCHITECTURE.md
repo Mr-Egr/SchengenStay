@@ -3,8 +3,9 @@
 > Sections 1-12 describe the planned V1 architecture, including features that
 > are not implemented yet. The implemented date engine is documented in
 > [section 13](#13-implemented-stage-1-engine), and the Stage 2 compliance contract
-> in [section 14](#14-stage-2-compliance-contract). The browser interface,
-> maximum-stay/earliest-entry searches, and deployment remain planned work.
+> in [section 14](#14-stage-2-compliance-contract). Stage 3 planning is documented
+> in [section 15](#15-stage-3-travel-planner). Browser integration and deployment
+> remain planned work.
 
 ## 1. Architectural goals
 
@@ -165,15 +166,14 @@ with [README_START_HERE.md](README_START_HERE.md).
 
 1. **Stage boundary:** Stage 1 adds date models/helpers, validation, normalized
    intervals, and `usage_on()`. Stage 2 adds `check_history()` and fixed-itinerary
-   `check_plan()` with first-violation reporting (section 14). Search algorithms
-   and all browser work remain deferred.
+   `check_plan()` with first-violation reporting (section 14). Stage 3 adds bounded
+   searches and independent scenario comparison (section 15). Browser work is deferred.
 2. **Canonical status vocabulary:** `CALCULATION_RULES.md` section 7 is the public
    result contract. PRODUCT.md also uses `VALID_FOR_RULE` and
    `WITHIN_90_180_RULE`; these are not additional API statuses. The supported
    success code is `WITHIN_RULE`. No status means travel is authorized.
 3. **Bounded searches:** the roadmap/rules mention `NOT_FOUND_WITHIN_HORIZON`.
-   Treat that as a future reason for `HORIZON_LIMIT`, not a seventh top-level
-   status. No search behavior is implemented.
+   This is a reason for `HORIZON_LIMIT`, not a seventh top-level status.
 4. **Scope:** inputs must already represent countable short stays. Country
    labels are descriptive metadata only. Historical membership inference,
    residence permits, D visas, pending applications, national extensions, bilateral
@@ -203,7 +203,7 @@ with [README_START_HERE.md](README_START_HERE.md).
 The enum is used by Stage 2 compliance results. Stage 1 `UsageResult`
 contains numbers, dates, scope notes, and any ongoing-stay assumption, but no
 compliance status. Stage 2 precedence and inspection limits are specified below;
-Stage 3 search limits remain undecided.
+Stage 3 search limits are specified in section 15.
 
 ### Current Python API and computation limits
 
@@ -394,3 +394,177 @@ Commission arithmetic examples and their exact source/version are recorded in
 `tests/fixtures/official_examples.json` and tested offline. Derived next-day
 boundaries are labeled separately. Live calculator comparison, broader official
 coverage, legal-source review for release, and browser work remain outstanding.
+
+## 15. Stage 3 travel planner
+
+`planner.py` builds on the existing fixed-trip `check_plan()` API. All searches
+validate the first proposal through that API. Earliest-entry search then reuses
+its validated immutable intervals and historical result with the same internal
+itinerary evaluator; it does not duplicate day arithmetic or rescan history for
+every candidate. Scenario comparison calls `check_plan()` for each independent
+alternative. No proposed trip is appended to actual history, saved, or transmitted.
+
+The user's Stage 3 scope explicitly includes pure-Python scenario comparison,
+bringing that portion of the original post-V1 requirement forward. A comparison
+view, saved variants, and all browser/persistence work remain future stages.
+
+### Public signatures
+
+```python
+max_continuous_stay(stays, arrival: date, horizon_days: int, *,
+                    as_of=None, scope=CalculationScope.COUNTABLE_SHORT_STAYS,
+                    history_complete=True, max_inspected_days=10_000) -> MaxStayResult
+
+find_earliest_entry(stays, length_days: int, search_start: date, horizon_days: int, *,
+                    as_of=None, scope=CalculationScope.COUNTABLE_SHORT_STAYS,
+                    history_complete=True, max_inspected_days=10_000) -> EntrySearchResult
+
+compare_scenarios(stays, scenarios: Sequence[PlannedStay], *,
+                  as_of=None, scope=CalculationScope.COUNTABLE_SHORT_STAYS,
+                  history_complete=True, max_inspected_days=10_000) -> ComparisonResult
+```
+
+These functions and the result classes (including `ScenarioResult`) are exported
+from `schengenstay`. `stays` is `Sequence[HistoryStay] | None`; dates must be exact
+`datetime.date` objects. Fixed-trip evaluation remains
+`check_plan(stays, plan: PlannedStay | None, *, as_of=None, scope=...,`
+`history_complete=True, max_inspected_days=10_000) -> PlanResult`.
+
+An explicit `as_of` is required in practice: omitting it returns
+`INSUFFICIENT_DATA`. All completed history must end by that cutoff; every proposed
+entry/search start must follow it. An occupied date is therefore rejected as
+inconsistent chronology, never counted a second time. Ongoing history returns
+`ONGOING_EXIT_REQUIRED`; the caller must supply a confirmed actual exit before
+planning. Scope/completeness declarations and their defaults are unchanged from
+section 14. Invalid, incomplete, unsupported, or inspection-limited history blocks
+planning. No intermediate travel between history and a proposal is assumed; each
+evaluated itinerary retains `NO_ADDITIONAL_TRAVEL_ASSUMED` in its warnings.
+
+### Search result interpretation
+
+The six-status vocabulary is unchanged. Frozen search results expose `status`,
+`planning_status`, `reason_codes`, `history_result`, `evaluation`, `issues`,
+`scope_notes`, and `human_explanation_keys` (`planner.<lowercase_code>`).
+`evaluation` is a `PlanResult`, preserving daily evidence, used days, window,
+warnings, and the separate historical result.
+
+- `planning_status` describes only the search. `status` additionally preserves a
+  known historical violation as `VIOLATION`, even when a later maximum or entry
+  is found. `HISTORICAL_VIOLATION` remains in the reasons. If a historical
+  violation and an incomplete search coexist, the aggregate is `VIOLATION` and
+  `planning_status` is `HORIZON_LIMIT`; neither fact is hidden.
+- `MaxStayResult` supplies `arrival`, `search_horizon_end`, `consecutive_days`,
+  `latest_compliant_exit`, `first_violation_date`, and `maximum_proven`.
+  `None` days means no planning scan; zero means the first proposed day fails.
+  A positive prefix followed by an inspected violation proves its maximum and
+  has planning status `WITHIN_RULE` with `MAXIMUM_STAY_FOUND`. The probe in
+  `evaluation` deliberately includes the failing day, so its itinerary status is
+  `VIOLATION`; its snapshot describes the probe's end, not the prefix's exit.
+  A failing arrival instead returns `VIOLATION` / `ENTRY_DATE_EXCEEDS_LIMIT`.
+- A maximum search that stops without a violation returns `HORIZON_LIMIT` and
+  `maximum_proven=False`. Its length/exit describe only the inspected compliant
+  prefix. `SEARCH_HORIZON_REACHED` distinguishes the requested date bound from
+  `INSPECTION_LIMIT_REACHED`. Even 90 checked days remain horizon-limited until
+  the first failing day has actually been inspected.
+- `EntrySearchResult` supplies `length_days`, `search_start`, `search_horizon_end`,
+  `entry`, `exit`, `candidates_checked`, `inspected_plan_days`, and
+  `arithmetic_impossible`. Dates are returned only after the **entire** candidate
+  passes, with planning status `WITHIN_RULE` / `EARLIEST_ENTRY_FOUND`.
+  `evaluation` describes that candidate, or the last attempted one if no match.
+- Exhausting all candidate dates yields `HORIZON_LIMIT` /
+  `NOT_FOUND_WITHIN_HORIZON`; it does not mean no later date can work.
+  Exhausting inspection work yields `INSPECTION_LIMIT_REACHED`; the engine stops
+  rather than skipping an uncertain earlier candidate and calling a later one
+  earliest. A complete last candidate takes precedence over budget exhaustion.
+- A structurally valid requested continuous length over 90 days can never fit
+  this arithmetic: its first 91 days alone exceed the count in a 180-day window.
+  After valid context/history and a failing candidate are established, the search
+  returns `VIOLATION` / `TRIP_LENGTH_EXCEEDS_LIMIT`, `arithmetic_impossible=True`.
+  It does not search later dates. Blocked context/history or a budget-limited
+  first candidate still propagates its blocked/limited outcome. This is only a
+  statement about continuous countable days under this rule, not legal eligibility.
+
+`ComparisonResult.scenarios` is an ordered tuple of `ScenarioResult(index, plan,
+result)`. Each result is a complete, independent `PlanResult`; invalid items do
+not hide the other alternatives. An absent or wrong-type proposal is represented
+by `plan=None` and retains its index and structured check result. A malformed
+scenario container has top-level issues; item issues stay in the item's result.
+Aggregate precedence is `INVALID_INPUT`, `OUT_OF_SCOPE`, `INSUFFICIENT_DATA`,
+`VIOLATION`, `HORIZON_LIMIT`, then `WITHIN_RULE`. Display individual outcomes
+alongside this summary: it does not replace their distinct explanations.
+
+### Bounds and algorithmic cost
+
+- At most 500 actual history records, with existing date/scope validation.
+- `horizon_days` and `length_days` must be integers from 1 to 10,000; booleans,
+  strings, zero, negatives, and larger values produce structured `INVALID_INPUT`.
+  Over-90 lengths within that input cap are arithmetic impossibilities, not
+  malformed requests. Search constants live in `schengenstay.planner`.
+- A maximum horizon includes arrival: `[arrival, arrival + horizon_days - 1]`.
+  An entry-search horizon includes the first and last **entry** candidates:
+  `[search_start, search_start + horizon_days - 1]`. Departures may fall beyond
+  that horizon. All requested candidate departures must fit `date.max`; the
+  engine rejects overflowing bounds rather than silently shortening them.
+- `max_inspected_days` remains an exact integer from 1 to 10,000. Maximum search
+  has separate history and probe budgets. Earliest-entry search checks history
+  once with that budget, then shares a second budget across all candidate days.
+  At least one inspection is used per attempted candidate. Passing arrival
+  alone never certifies a longer trip. Ordinal iteration avoids date overflow.
+- Scenario comparison accepts a sequence of 1-100 alternatives, each with its
+  own fixed-trip history and itinerary budgets. Empty lists, generators, and
+  malformed containers return `INVALID_INPUT`.
+
+The reference search proceeds chronologically and uses the existing interval
+counter on every inspected proposed day, allowing old days to expire naturally.
+There is no `90 - used_on_arrival` shortcut, monotonicity assumption about arrival
+dates, or unbounded loop. For n records, k history inspections, h entry candidates,
+l trip days, and b the plan inspection budget, maximum search costs
+O((k + min(horizon, b, 91)) n log n). Earliest search costs
+O((k + min(h * min(l, 91), b)) n log n), plus a snapshot per candidate of the same
+order; it stores O(n) working data. Comparison of s scenarios costs
+O(s (k + min(l, b, 91)) n log n), with O(n + s) storage. Treat n as at least 2 in
+these bounds for empty/single-record cases. Comparison intentionally favors the
+public fixed-trip reference path over caching; repeated past scans are bounded.
+
+Four new deterministic properties compare maximum length, earliest-entry
+minimality, inspection budgets, and independent scenarios against a separate
+occupied-date-set oracle. Existing Stage 1/2 tests remain. Maximum searches also
+match the four published duration cases in the existing Commission fixture;
+the adjacent-date earliest-entry assertion is explicitly labeled derived.
+No new live-calculator verification or broad official parity is claimed.
+
+### Executable examples
+
+```python
+from datetime import date
+from schengenstay import (
+    PlannedStay, ResultStatus, ShortStay, compare_scenarios,
+    find_earliest_entry, max_continuous_stay,
+)
+
+maximum = max_continuous_stay([], date(2024, 1, 1), 91, as_of=date(2023, 12, 31))
+assert maximum.status is ResultStatus.WITHIN_RULE
+assert maximum.consecutive_days == 90
+assert maximum.latest_compliant_exit == date(2024, 3, 30)
+assert maximum.first_violation_date == date(2024, 3, 31)
+assert maximum.maximum_proven
+
+history = [ShortStay("actual", date(2024, 1, 1), date(2024, 3, 30))]
+earliest = find_earliest_entry(history, 90, date(2024, 6, 28), 2,
+                              as_of=date(2024, 6, 27))
+assert earliest.entry == date(2024, 6, 29)
+assert earliest.exit == date(2024, 9, 26)
+
+comparison = compare_scenarios(history, [
+    PlannedStay(date(2024, 6, 28), date(2024, 6, 28)),
+    PlannedStay(date(2024, 6, 29), date(2024, 9, 26)),
+], as_of=date(2024, 6, 27))
+assert [item.result.status for item in comparison.scenarios] == [
+    ResultStatus.VIOLATION, ResultStatus.WITHIN_RULE,
+]
+assert len(history) == 1  # Hypothetical travel was not added to actual history.
+```
+
+All outputs remain informational arithmetic. No result grants permission to enter
+or stay. No visa/nationality/residence adjudication, browser, Pyodide integration,
+persistence, or deployment is implemented in Stage 3.

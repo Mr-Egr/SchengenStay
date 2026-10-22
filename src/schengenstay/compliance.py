@@ -290,8 +290,22 @@ def check_plan(
     )
     if history.status not in (ResultStatus.WITHIN_RULE, ResultStatus.VIOLATION):
         return PlanResult(history.status, history.reason_codes, history_result=history)
+    return _evaluate_plan(_history_intervals(stays, as_of), plan, history, max_inspected_days)
+
+
+def _evaluate_plan(
+    intervals: Sequence[DateInterval],
+    plan: PlannedStay,
+    history: CheckResult,
+    max_inspected_days: int,
+) -> PlanResult:
+    """Evaluate a validated future plan against already checked, immutable history.
+
+    Shared with bounded searches; callers must validate through check_plan first.
+    Reusing history evidence avoids rescanning the past for every candidate.
+    """
     proposed = DateInterval(plan.entry, plan.exit)
-    coverage = (*_history_intervals(stays, as_of), proposed)
+    coverage = (*intervals, proposed)
     itinerary = _scan(
         coverage,
         (proposed,),

@@ -47,6 +47,12 @@ For proposed stay `[a,b]`: form `S_proposed = S ∪ {all dates a..b}`; for each 
 - `earliest_entry_for_length(length, search_start, search_horizon)` tests each arrival candidate and every day of that trip. Return candidate, or `NOT_FOUND_WITHIN_HORIZON`.
 - Validate `length >= 1`, positive horizons, sensible max iterations and finite supported calendar date ranges.
 
+Stage 3 implements these searches plus independent fixed-trip scenario comparison.
+See [the planner contract](ARCHITECTURE.md#15-stage-3-travel-planner) for inclusive
+horizons, the shared candidate-inspection budget, structured prefix/proof fields,
+and the distinction between a bounded search failure and a provably impossible
+continuous length over 90. Historical violations remain separate and visible.
+
 ## 5. Country and scope limitations
 
 - Country tags are **descriptive only** in V1. V1 supports entries already identified by user as **countable short-stay days in Schengen**.
@@ -123,3 +129,8 @@ durations. Five additional regression cases derive the next-day/first-violation
 boundaries; those expectations are not represented as quoted official results.
 The tests do not adjudicate the examples' visa circumstances. No live-calculator
 comparison has been performed; broader reference coverage remains a release task.
+
+Stage 3 additionally runs maximum-stay searches against the four published
+duration cases in the same fixture. One earliest-entry regression is derived
+from adjacent published cases and is labeled accordingly. These are offline
+tests of the previously recorded source, not a new live-calculator comparison.
