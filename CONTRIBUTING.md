@@ -44,7 +44,8 @@ add any discovered regression as a concrete unit test as well.
 - Do not add paid services, runtime dependencies without a concrete need,
   server storage, telemetry, or duplicate calculation logic in JavaScript.
 
-GitHub Actions uses the commands above on Python 3.12 and Node 22. Browser checks
+GitHub Actions uses the commands above on both Ubuntu and Windows with Python
+3.12 and Node 22. Browser checks
 are separate optional local checks using Playwright; see the frontend guide.
 A local pass does not prove that a remote workflow ran; report these separately.
 No deployment is configured.
@@ -93,8 +94,12 @@ and initial runtime downloads; it needs no account, API key, or paid service.
 
 The three development tools are pinned to the versions verified locally in
 `pyproject.toml`; transitive and build dependencies are not fully locked yet.
-GitHub Actions runs the same
-checks on Python 3.12 for pushes and pull requests. It does not deploy anything.
+GitHub Actions runs the same checks on both operating systems for pushes and pull
+requests. The browser source archive uses canonical metadata and uncompressed ZIP
+entries, so the byte-for-byte source check is independent of the build host and
+zlib version. Archive tests cover Windows/Linux/macOS metadata defaults and LF/CRLF
+checkouts. Do not regenerate it during CI to hide a stale committed artifact.
+No checks are skipped or downgraded, and CI does not deploy anything.
 
 ## File map and verification scope
 

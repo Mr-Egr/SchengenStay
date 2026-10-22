@@ -1,5 +1,53 @@
 # Progress record
 
+## 2026-10-23 — Repair cross-platform CI archive checks
+
+Inspected GitHub Actions through the installed GitHub CLI. Both the Stage 5
+[85d51bf run](https://github.com/Mr-Egr/SchengenStay/actions/runs/39864445655)
+and the date UX [bc3f1fd run](https://github.com/Mr-Egr/SchengenStay/actions/runs/39868587043)
+failed at **Browser Python source archive consistency**, with the exact error:
+
+```text
+Browser archive is stale; run python scripts/build_browser.py
+Error: Process completed with exit code 1.
+```
+
+The committed ZIP was built on Windows (`ZipInfo.create_system == 0`), while
+Ubuntu's default is `3`. The builder fixed dates/permissions but omitted this
+field. Reproducing Linux metadata defaults locally changed exactly ten bytes in
+the 16,711-byte archive, one creator-system byte per Python member; all ten source
+payloads were identical. Local Windows checks therefore passed while Linux's
+strict byte comparison correctly rejected the different artifact. CI Python
+3.12.15 versus local 3.12.14 was not the source of these metadata differences.
+
+Changes:
+
+- `scripts/build_browser.py` fixes creator metadata to Unix on every host and
+  uses stored ZIP entries to remove compression-library variation as well. The
+  regenerated `web/python/schengenstay.zip` is 50,437 bytes; source is unchanged.
+- `tests/test_browser_archive.py` adds five checks: simulated Windows/Linux/macOS
+  metadata defaults, LF/CRLF and UTF-8 content, sorted source-only membership,
+  canonical metadata, real source-change detection and exact committed bytes.
+- `.github/workflows/ci.yml` now runs all existing checks on both Ubuntu and
+  Windows, with Python 3.12 and Node 22. Exact archive equality remains enforced;
+  CI does not regenerate the bundle or suppress failures.
+- CONTRIBUTING.md and docs/FRONTEND.md document the shared archive format and CI
+  platforms. No application, calculation, result-contract or dependency changes.
+
+Local verification: **305 pytest tests, 32 frontend tests, 26 Chrome interface
+checks, and 14 real Python/browser integration checks with 18 complete CPython
+parity cases passed**. Ruff, pip dependency consistency, byte-for-byte archive
+consistency, documentation checks (29 links/anchors and four API examples) and
+Git whitespace checks passed. Used Python 3.12.14, Node 24.19.0 and Chrome
+155.0.8059.85; the Node 22/Linux environment is verified by the actual CI run.
+The sandbox denied pytest's default temporary directory, so the local test run
+set `PYTEST_DEBUG_TEMPROOT` to the ignored workspace `.tmp/pytest` directory;
+no test or repository setting was skipped or relaxed.
+
+The new remote run is checked after pushing this repair; its actual conclusion
+and URL are reported in the delivery message, separately from local results.
+Stage 6 and deployment remain untouched.
+
 ## 2026-10-23 — Date input UX fix before Stage 6
 
 Started from clean `main`/`origin/main` at `85d51bf`. Audited the check-date
