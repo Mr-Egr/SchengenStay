@@ -1,5 +1,26 @@
 # Progress record
 
+## 2026-10-22 — Integrating the GitHub initial history
+
+Configured `origin` as `https://github.com/Mr-Egr/SchengenStay` and inspected both
+histories. Local `a50e7c6` contains the 22-file Stage 0/Stage 1 project; remote
+`6bc87da` is the independent initial commit containing only README.md.
+
+Merged with `git merge --allow-unrelated-histories --no-ff --no-commit origin/main`.
+The only conflict was the expected README add/add conflict. Retained the complete
+local README and inserted the remote's original description as planned project
+scope. Both original commits remain parents/ancestors of the merge; neither was
+rewritten. All original project files remain present. This log records the
+integration checks; no calculation code, tests, dependencies, or CI were changed.
+
+Checks after resolving the merge:
+
+| Command | Result |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q` | 116 passed in 2.86 seconds |
+| `.\.venv\Scripts\ruff.exe check .` | All checks passed |
+| `.\.venv\Scripts\python.exe -m pip check` | No broken requirements found |
+
 ## 2026-10-22 — Initial commit preparation
 
 Prepared the actual current Stage 0 and Stage 1 state for one initial local commit,

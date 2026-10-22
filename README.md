@@ -1,5 +1,8 @@
 # SchengenStay
 
+Project description (planned scope):
+Python-powered Schengen 90/180-day calculator and travel planning web application.
+
 **Stage 1: pure Python date engine.** Inclusive interval operations, structured
 history validation, and single-date rolling-window usage are implemented. There
 is no compliance checker, travel planner, command-line interface, web interface,
