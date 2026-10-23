@@ -37,6 +37,7 @@ below and the eventual hosting configuration before separately authorizing Stage
 | Medium | Editing inspection budget left results/metrics visible until blur. | Invalidate on input without replacing the active control; real-browser regression reproduced the old result before the fix. |
 | Medium | Duplicate raw JSON keys silently selected the last value, allowing an unknown/incomplete declaration to be overwritten. The normal UI does not generate duplicate keys. | Reject duplicate names at every object depth as `INVALID_INPUT` with field `json`; three failing regressions and a 300-example malformed-input property. |
 | Low | Installed package description still described a scaffold. | Updated description to implemented arithmetic/planning; built wheel metadata inspected. |
+| Low | CI Chromium exposed a test race: immediate dialog-count assertions ran before its queued close event removed the element. | Reproduced with pinned Chromium 151; successful save/cancel/remove paths await DOM removal, retaining every assertion and invalid-input check. |
 
 No reproducible critical/high-severity arithmetic or UI defect remains from this
 audit. This is the result of the described checks, not an exhaustive security audit.

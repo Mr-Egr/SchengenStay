@@ -76,6 +76,16 @@ run Chromium UI and real Python integration suites on both. The corresponding
 post-push Actions results are checked and reported in delivery, not inferred from
 local success. No checks were disabled, skipped, downgraded or replaced with mocks.
 
+The first Stage 7 CI run (`39875544457`, commit `d952eda`) exposed a UI-test
+synchronization defect on both Windows and Ubuntu Chromium 151: the assertion after
+saving observed the closed dialog before its queued `close` event removed it
+(`1 !== 0`, `tests/frontend/browser.mjs:74`). Reproduced locally with the exact
+pinned browser. Successful save/cancel/remove paths now wait for DOM removal
+before their unchanged assertions or next interaction; invalid submissions still
+assert their errors immediately. All 26 interface checks then passed locally on
+that browser, along with 23 integration groups and 99 full-result parity cases.
+This changes only test synchronization, not application behavior.
+
 ### Remaining gates and stop boundary
 
 Technical checks pass; no reproducible critical/high-severity defect remains

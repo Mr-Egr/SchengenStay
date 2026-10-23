@@ -38,6 +38,9 @@ try {
   page.on('request', request => requests.push(request.url()));
   const go = async route => { await page.locator(`nav a[href="#${route}"]`).click(); await page.waitForFunction(route => location.hash === `#${route}` && document.querySelector('nav [aria-current="page"]').getAttribute('href') === `#${route}`, route); };
   const save = () => page.locator('dialog button[type="submit"]').click();
+  // close() queues the close event; teardown/focus restoration happen in that
+  // event, not necessarily before Playwright's click promise settles.
+  const waitForDialogClose = () => page.locator('dialog').waitFor({ state: 'detached' });
   const fillDates = async (entry, exit) => { await page.locator('#field-entry').fill(entry); await page.locator('#field-exit').fill(exit); };
 
   await check('empty dashboard requires explicit calculation context', async () => {
@@ -71,6 +74,7 @@ try {
     await page.locator('#field-note').fill('Synthetic browser-test record');
     await fillDates('2024-02-28', '2024-03-01');
     await save();
+    await waitForDialogClose();
     assert.equal(await page.locator('dialog').count(), 0);
     assert.equal(await page.locator('.trip-row').count(), 1);
     assert.match(await page.locator('.trip-row h3').innerText(), /<img/);
@@ -79,6 +83,7 @@ try {
     await page.locator('#field-label').fill('Alpine break');
     await page.locator('#field-exit').fill('2024-03-02');
     await save();
+    await waitForDialogClose();
     assert.equal(await page.locator('.trip-row h3').innerText(), 'Alpine break');
     assert.equal(await page.locator('.trip-row').count(), 1);
   });
@@ -107,12 +112,14 @@ try {
         await page.locator('#field-length').fill('20');
       }
       await save();
+      await waitForDialogClose();
     }
     assert.equal(await page.locator('.scenario-card').count(), 3);
     for (const text of await page.locator('.scenario-result').allTextContents()) assert.match(text, /No calculation to show/);
     await page.getByRole('button', { name: 'Edit: Test fixed', exact: true }).click();
     await page.locator('#field-exit').fill('2027-01-16');
     await save();
+    await waitForDialogClose();
     assert.equal(await page.locator('.scenario-card').count(), 3);
     await go('history');
     assert.equal(await page.locator('.trip-row').count(), 1);
@@ -162,13 +169,16 @@ try {
     await page.getByRole('button', { name: 'Remove: Alpine break', exact: true }).click();
     assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Cancel');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await waitForDialogClose();
     assert.equal(await page.locator('.trip-row').count(), 1);
     await page.getByRole('button', { name: 'Remove: Alpine break', exact: true }).click();
     await page.getByRole('button', { name: 'Remove entry', exact: true }).click();
+    await waitForDialogClose();
     assert.equal(await page.locator('.trip-row').count(), 0);
     await go('planner');
     await page.getByRole('button', { name: 'Remove: Test earliest', exact: true }).click();
     await page.getByRole('button', { name: 'Remove entry', exact: true }).click();
+    await waitForDialogClose();
     assert.equal(await page.locator('.scenario-card').count(), 2);
   });
   await check('reload starts a new session with no browser storage', async () => {
