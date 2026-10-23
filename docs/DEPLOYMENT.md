@@ -1,5 +1,9 @@
 # Static deployment and publication
 
+Post-release note: [optional analytics preparation](ANALYTICS.md) ships disabled,
+without a token or CSP permissions. The historical production evidence below
+describes the v1.0.0 release; subsequent copy changes do not alter that tag.
+
 Stage 8 uses free GitHub Pages with the existing Pyodide architecture. Production
 verification and the final URL are recorded below only after they actually pass.
 No backend, account, analytics, paid API or commercial feature is introduced.

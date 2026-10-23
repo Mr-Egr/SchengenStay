@@ -6,7 +6,7 @@ import('./app.js').catch(() => {
   const title = document.createElement('h1');
   title.textContent = 'The workspace could not open.';
   const text = document.createElement('p');
-  text.textContent = 'Serve the web folder over local HTTP, then reload. Calculations are not connected in this preview.';
+  text.textContent = 'Check your connection and reload. Your travel records have not been sent anywhere.';
   const retry = document.createElement('button');
   retry.className = 'button secondary';
   retry.textContent = 'Reload interface';
@@ -14,3 +14,6 @@ import('./app.js').catch(() => {
   section.append(title, text, retry);
   document.getElementById('app').replaceChildren(section);
 });
+
+// Independent and disabled by default; never await analytics to open the workspace.
+import('./analytics.js').then(({ startAnalytics }) => startAnalytics()).catch(() => {});

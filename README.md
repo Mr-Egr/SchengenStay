@@ -21,6 +21,7 @@ rule, including both arrival and departure days.
 
 Travel records are processed locally. No accounts, analytics, ads, paid APIs or
 application backend. Runtime downloads still contact the hosting/CDN providers.
+Optional [website analytics is prepared but disabled](docs/ANALYTICS.md).
 See the [mobile screenshot](docs/images/overview-mobile.png).
 
 ## Engineering

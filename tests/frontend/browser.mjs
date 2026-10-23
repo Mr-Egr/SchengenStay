@@ -202,6 +202,7 @@ try {
           assert.equal(await page.locator('main').count(), 1);
           assert.equal(await page.locator('nav [aria-current="page"]').count(), 1);
           assert.ok(await page.locator('h1').isVisible());
+          assert.doesNotMatch(await page.locator('body').innerText(), /Python|Pyodide|WebAssembly|Web Worker/i);
         }
       }
     }
@@ -280,6 +281,25 @@ try {
     await failed.close();
   });
   await dateInputChecks({ browser, origin, check });
+  await check('optional analytics module failure does not prevent workspace editing', async () => {
+    const isolated = await browser.newContext();
+    await isolated.route('**/scripts/analytics.js', route => route.abort());
+    const standalone = await isolated.newPage();
+    await standalone.goto(`${origin}/#history`);
+    await standalone.getByRole('button', { name: 'Add trip', exact: true }).first().click();
+    assert.equal(await standalone.locator('dialog[open]').count(), 1);
+    await standalone.keyboard.press('Escape');
+    await isolated.close();
+  });
+  await check('analytics remains inactive with no beacon, including after navigation and edits', async () => {
+    assert.equal(await page.locator('#schengenstay-analytics').count(), 0);
+    assert.ok(requests.every(url => !url.includes('cloudflareinsights.com')));
+    await page.goto(`${origin}/#settings`);
+    await page.locator('#field-language').selectOption('en');
+    assert.match(await page.locator('main').innerText(), /Website analytics is off/);
+    await page.locator('#field-language').selectOption('ru');
+    assert.match(await page.locator('main').innerText(), /Аналитика сайта отключена/);
+  });
   if (process.env.SCREENSHOT_DIR) {
     await mkdir(process.env.SCREENSHOT_DIR, { recursive: true });
     await page.setViewportSize({ width: 1440, height: 1080 });

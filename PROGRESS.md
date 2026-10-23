@@ -1,5 +1,43 @@
 # Progress record
 
+## 2026-10-23 — Post-release copy and inactive analytics preparation
+
+Starting from clean `5c79726`, inspected frontend/localization, bridge/storage,
+architecture/privacy records, the existing quality-gated workflow and actual Pages
+API settings. Hosting remains HTTPS GitHub Pages through Actions. The v1.0.0 tag's
+previously pending Ubuntu job has now passed; the original release/tag is unchanged.
+
+Replaced runtime marketing, loading and error labels with calculator/on-device
+language in EN/RU. The [exact before/after audit](docs/UI_COPY.md) includes every
+active localization change. No CSS, layout, navigation, components, assets, date
+editor, Python source/archive, bridge, result contract or storage behavior changed.
+The startup fallback now gives useful connection/reload instructions instead of
+obsolete preview guidance.
+
+Added independent optional analytics loader/configuration, **disabled**, with no
+real token and no Cloudflare CSP allowance. It has no application-data dependency;
+it rejects private/unrecognized URLs and incoming referrers, respects GPC/DNT,
+disables SPA measurement and tolerates loading failure. It adds no events or
+persistent IDs. The settings privacy text explicitly says analytics is off.
+[Setup and sources](docs/ANALYTICS.md) document the missing public site token,
+the unresolved strict page-view-only limitation of Cloudflare's standard RUM
+beacon, and the required jurisdiction/notice/consent review before activation.
+No provider collection or legal compliance is claimed as verified.
+
+Local checks passed: **411 Python tests**, **42 frontend unit tests**, **28 Chrome
+155 UI/date/accessibility groups**, **23 real browser integration groups and 99
+CPython/Pyodide parity cases**. Coverage includes seven screens, EN/RU, both themes,
+desktop/tablet/mobile, blocked optional-module startup, storage/privacy and all
+existing calculation journeys. No Cloudflare requests occurred; existing strict
+static-GET-only network assertions remain intact. Ruff, dependency consistency,
+source archive, deterministic build and documentation examples/links passed.
+The production build now has 30 files, including the two inactive adapter modules.
+
+New files: analytics config/loader, focused analytics tests, analytics setup/privacy
+guide and exact UI-copy audit. Updated only copy/bootstrap, browser test labels and
+assertions, build allowlist and relevant documentation. Remote CI/publication
+outcomes are verified after push and reported in delivery; no release/tag is created.
+
 ## 2026-10-23 — Stage 8 deployment and portfolio release
 
 Started at clean, synchronized `5b44e94`. Read the specifications, implementation,

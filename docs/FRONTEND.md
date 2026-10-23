@@ -1,5 +1,8 @@
 # Browser application
 
+Post-release UI copy is listed in [the EN/RU audit](UI_COPY.md). Optional Cloudflare
+analytics is [prepared but disabled](ANALYTICS.md); no analytics requests occur.
+
 Stage 5 connects the seven-screen HTML/CSS/vanilla JavaScript interface to the
 existing Python package using **Pyodide 314.0.7** in a module Web Worker. There is
 no JavaScript day-rule engine, backend, account or telemetry.

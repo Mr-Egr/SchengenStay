@@ -892,3 +892,15 @@ Public URL, production evidence, privacy/header limitations, attribution and
 maintainer publishing instructions are in [deployment](docs/DEPLOYMENT.md).
 The app retains lazy CDN runtime loading, in-memory defaults, consent-based local
 saving and no travel-data network submission. No backend or new calculation feature.
+
+## 21. Post-release copy and optional analytics preparation
+
+EN/RU interface text describes the calculator and on-device processing without
+runtime implementation labels. Python, JSON contracts, worker/bridge, storage,
+date editor and view structure are unchanged. See the [exact copy audit](docs/UI_COPY.md).
+
+Independently imported `analytics.js` reads only static configuration and URL/privacy
+guards. It has no application-state, form, calculation or storage dependency.
+The official beacon remains disabled: no token, completed review or CSP allowance.
+Optional adapter errors do not affect startup. Activation and collection/consent
+limitations are in [analytics preparation](docs/ANALYTICS.md).

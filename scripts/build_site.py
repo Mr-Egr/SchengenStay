@@ -18,7 +18,7 @@ scripts/app.js scripts/bootstrap.js scripts/components.js scripts/context-i18n.j
 scripts/context-ui.js scripts/date-input.js scripts/dates.js scripts/dom.js
 scripts/i18n.js scripts/integration-i18n.js scripts/pyodide-bridge.js
 scripts/python-worker.js scripts/results.js scripts/storage.js scripts/store.js
-scripts/views.js
+scripts/views.js scripts/analytics.js scripts/analytics-config.js
 """.split())
 
 

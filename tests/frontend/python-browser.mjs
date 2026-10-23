@@ -227,7 +227,7 @@ try {
     await failure.locator('[data-focus="run-history"]').click(); await failure.locator('[data-runtime="error"]').waitFor({ timeout: 90000 });
     assert.equal(await failure.locator('[data-result-status]').count(), 0);
     await offline.unroute('https://cdn.jsdelivr.net/**');
-    await failure.getByRole('button', { name: 'Retry Python loading' }).click(); await failure.locator('[data-runtime="ready"]').waitFor({ timeout: 90000 });
+    await failure.getByRole('button', { name: 'Retry loading' }).click(); await failure.locator('[data-runtime="ready"]').waitFor({ timeout: 90000 });
     await failure.locator('[data-focus="run-history"]').click(); await failure.locator('[data-result-status="INSUFFICIENT_DATA"]').first().waitFor();
     await offline.close();
   });
