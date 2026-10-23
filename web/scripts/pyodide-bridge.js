@@ -33,20 +33,29 @@ export class PythonBridge {
             else pending.resolve(data.response.result);
           } else if (data.type === 'failed') this.fail(data.code);
         };
-        worker.onerror = event => { event.preventDefault?.(); this.fail('LOAD_FAILED'); };
+        worker.onerror = event => {
+          event.preventDefault?.();
+          if (worker === this.worker) this.fail('LOAD_FAILED');
+        };
+        worker.onmessageerror = () => { if (worker === this.worker) this.fail('PROTOCOL_ERROR'); };
         this.startTimer = setTimeout(() => this.fail('LOAD_TIMEOUT'), this.startupTimeout);
       } catch { this.fail('LOAD_FAILED'); }
     });
     return this.initializing;
   }
   async request(request) {
-    await this.start();
+    const starting = this.start();
+    const worker = this.worker;
+    await starting;
+    // Cancellation can happen after readiness resolves but before this continuation.
+    if (worker !== this.worker || this.state !== 'ready') throw new Error('CANCELLED');
     if (this.pending.size >= 8) throw new Error('QUEUE_LIMIT');
     return new Promise((resolve, reject) => {
       const id = ++this.sequence;
       const timer = setTimeout(() => this.fail('REQUEST_TIMEOUT'), this.requestTimeout);
       this.pending.set(id, { resolve, reject, timer });
-      this.worker.postMessage({ type: 'calculate', id, request });
+      try { worker.postMessage({ type: 'calculate', id, request }); }
+      catch { this.fail('CALCULATION_FAILED'); }
     });
   }
   fail(code) {

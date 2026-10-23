@@ -93,6 +93,7 @@ function render(focus = false) {
       results.invalidate(); persist(); render(); announce(historyChanged ? `${message} ${t('legal.reconfirm')}` : message);
     },
     setVisaDate: (name, value) => { state.visaDates[name] = value; invalidateEvidence(); },
+    setBudget: value => { state.budget = value; invalidateEvidence(); },
     showMonth: month => {
       if (!month) return;
       const previous = document.activeElement?.dataset.focus;

@@ -141,3 +141,17 @@ Stage 3 additionally runs maximum-stay searches against the four published
 duration cases in the same fixture. One earliest-entry regression is derived
 from adjacent published cases and is labeled accordingly. These are offline
 tests of the previously recorded source, not a new live-calculator comparison.
+
+### Stage 7 reference verification (2026-10-23)
+
+The accessible Commission manual was reread; all six published cases remain
+consistent with the recorded fixture. Twelve synthetic standard-short-stay cases
+were also entered into the official live calculator, with retained input dates
+and mode checked before accepting each result. Observed maximum lengths, history
+verdicts, first-violation evidence and continuation dates matched SchengenStay.
+The compliant Control screen does not always display used days; no unshown count
+is claimed as a live observation. The source URL, exact inputs, observed fields
+and equivalent ongoing/continuation assumptions are recorded in
+[release readiness](docs/RELEASE_READINESS.md) and a separate dated fixture.
+Offline regression runs are not represented as fresh live comparisons. No new
+visa, nationality, residence, country-membership or admission rule was implemented.

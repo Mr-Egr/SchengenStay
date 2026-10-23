@@ -1,13 +1,16 @@
 // Optional browser checks: Playwright is test tooling, never a web dependency.
 import assert from 'node:assert/strict';
 import { contextChecks } from './context-browser.mjs';
+import { releaseChecks } from './release-browser.mjs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
+const browserName = process.env.BROWSER_ENGINE || 'chromium';
+const browserType = require('playwright')[browserName];
+assert.ok(['chromium', 'firefox', 'webkit'].includes(browserName), 'Unsupported BROWSER_ENGINE');
 const root = resolve('web');
 const server = createServer(async (request, response) => {
   const rawPath = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -35,7 +38,7 @@ assert.equal(native.status, 0, native.stderr);
 const cases = JSON.parse(native.stdout);
 const expected = name => cases.find(item => item.name === name).expected;
 try {
-  browser = await chromium.launch({ headless: true, executablePath: process.env.BROWSER_EXECUTABLE || undefined });
+  browser = await browserType.launch({ headless: true, executablePath: process.env.BROWSER_EXECUTABLE || undefined });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1080 }, timezoneId: 'Europe/Minsk' });
   const page = await context.newPage();
   const errors = [], network = [];
@@ -93,6 +96,10 @@ try {
     assert.match(await page.locator('[data-evidence="result.violation"]').innerText(), /4 Oct 2023.*31 Mar 2024/s);
   });
   await check('invalid date, unsupported scope and limited history stay distinct', async () => {
+    await page.locator('#field-budget').fill('20');
+    assert.equal(await page.locator('[data-result-status]').count(), 0, 'typing a bound must immediately clear old results');
+    assert.equal(await page.locator('.metric.used .metric-value').innerText(), '—');
+    await page.locator('#field-budget').fill('10000'); await page.locator('#field-budget').blur();
     await setDate('0001-01-01'); await page.locator('[data-focus="run-history"]').click();
     assert.equal(await page.locator('#field-checkDate').getAttribute('aria-invalid'), 'true');
     assert.equal(await page.locator('[data-result-status]').count(), 0);
@@ -172,12 +179,21 @@ try {
     const actual = await page.evaluate(async requests => {
       const { PythonBridge } = await import('./scripts/pyodide-bridge.js');
       const bridge = new PythonBridge();
-      const results = [];
-      try { for (const request of requests) results.push(await bridge.request(request)); }
+      const results = [], timings = [];
+      const initialization = performance.now();
+      await bridge.start();
+      const startupMs = performance.now() - initialization;
+      try { for (const request of requests) {
+        const started = performance.now();
+        results.push(await bridge.request(request)); timings.push(performance.now() - started);
+      } }
       finally { bridge.cancel(); }
-      return results;
+      return { results, timings, startupMs };
     }, cases.map(item => item.request));
-    cases.forEach((item, index) => assert.deepEqual(actual[index], item.expected, item.name));
+    cases.forEach((item, index) => assert.deepEqual(actual.results[index], item.expected, item.name));
+    const sorted = [...actual.timings].sort((a, b) => a - b);
+    console.log(`MEASURE worker initialization ${Math.round(actual.startupMs)} ms; warm request median ${sorted[Math.floor(sorted.length / 2)].toFixed(1)} ms, p95 ${sorted[Math.floor(sorted.length * .95)].toFixed(1)} ms`);
+    for (const name of ['500_records', '10000_occupied_days', '10000_day_search', '100_scenarios']) console.log(`MEASURE ${name} ${actual.timings[cases.findIndex(item => item.name === name)].toFixed(1)} ms`);
     console.log(`MEASURE ${cases.length} parity cases including 500 records ${Date.now() - start} ms (new worker included)`);
   });
   await check('rapid edits during real loading discard stale responses; fresh results use new date', async () => {
@@ -207,7 +223,7 @@ try {
     const offline = await browser.newContext({ offline: false });
     await offline.route('https://cdn.jsdelivr.net/**', route => route.abort());
     const failure = await offline.newPage(); await failure.goto(`${origin}#calculator`);
-    await failure.locator('[data-focus="run-history"]').click(); await failure.locator('[data-runtime="error"]').waitFor();
+    await failure.locator('[data-focus="run-history"]').click(); await failure.locator('[data-runtime="error"]').waitFor({ timeout: 90000 });
     assert.equal(await failure.locator('[data-result-status]').count(), 0);
     await offline.unroute('https://cdn.jsdelivr.net/**');
     await failure.getByRole('button', { name: 'Retry Python loading' }).click(); await failure.locator('[data-runtime="ready"]').waitFor({ timeout: 90000 });
@@ -222,7 +238,8 @@ try {
     assert.equal(await page.evaluate(() => localStorage.length), 0);
   });
   await check('real initialization on a mobile viewport; all six result layouts fit narrow screens', async () => {
-    const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 2 });
+    // Firefox supports viewport testing but not Playwright's mobile emulation flag.
+    const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, ...(browserName === 'firefox' ? {} : { isMobile: true }), deviceScaleFactor: 2 });
     const mobile = await mobileContext.newPage();
     await mobile.goto(`${origin}#calculator`); await mobile.locator('#field-complete').check(); await mobile.locator('#field-scope').selectOption('COUNTABLE_SHORT_STAYS');
     const start = Date.now(); await mobile.locator('[data-focus="run-history"]').click(); await mobile.locator('[data-result-status="WITHIN_RULE"]').first().waitFor({ timeout: 90000 });
@@ -252,7 +269,8 @@ try {
     }
   });
   await contextChecks({ browser, origin, check });
-  console.log(`${checks} Python/browser integration checks and ${cases.length} full-result parity cases passed in Chrome ${browser.version()}.`);
+  await releaseChecks({ browser, origin, check });
+  console.log(`${checks} Python/browser integration checks and ${cases.length} full-result parity cases passed in ${browserName} ${browser.version()}.`);
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

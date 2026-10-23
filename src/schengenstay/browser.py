@@ -197,7 +197,8 @@ def handle_json(payload: str) -> str:
         if not isinstance(payload, str) or len(payload.encode("utf-8")) > MAX_REQUEST_BYTES:
             result = _invalid("request_size")
         else:
-            request = json.loads(payload, parse_constant=_reject_constant)
+            request = json.loads(payload, parse_constant=_reject_constant,
+                                 object_pairs_hook=_unique_object)
     except (ValueError, RecursionError, UnicodeEncodeError):
         result = _invalid("json")
     if result is None:
@@ -208,3 +209,13 @@ def handle_json(payload: str) -> str:
 
 def _reject_constant(value):
     raise ValueError("Non-JSON constant")
+
+
+def _unique_object(pairs):
+    """Reject ambiguous duplicate fields, including nested scope declarations."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON field")
+        result[key] = value
+    return result

@@ -74,6 +74,15 @@ def cases():
     large = [ShortStay(str(i), date(1700, 1, 1) + timedelta(days=i * 181),
                        date(1700, 1, 1) + timedelta(days=i * 181)) for i in range(500)]
     add("500_records", "check_history", large, day, check_history(large, day))
+    dense = [ShortStay(str(i), date(1700, 1, 1) + timedelta(days=i * 181),
+                       date(1700, 1, 20) + timedelta(days=i * 181)) for i in range(500)]
+    add("10000_occupied_days", "check_history", dense, day, check_history(dense, day))
+    add("10000_day_search", "find_earliest_entry", ninety, day,
+        find_earliest_entry(ninety, 90, date(2024, 4, 1), 10000, as_of=day),
+        search_start="2024-04-01", length_days=90, horizon_days=10000)
+    many_plans = [future] * 100
+    add("100_scenarios", "compare_scenarios", multiple, day,
+        compare_scenarios(multiple, many_plans, as_of=day), scenarios=serialize(many_plans))
     # The same new boundary contracts run in native CPython and real Pyodide.
     # Independent status/date/precedence assertions live in test_context.py.
     methods = [

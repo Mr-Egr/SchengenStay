@@ -3,7 +3,7 @@
 A travel-planning project with a tested Python day-count engine and a responsive
 web interface for organizing Schengen trips.
 
-**Current status: Stage 6 — scope and legal-context safeguards implemented.**
+**Current status: Stage 7 — quality assurance completed; release review pending.**
 The calculator and planner run the real Python package locally through Pyodide.
 There is no deployed application.
 
@@ -40,7 +40,7 @@ remaining-day figure is a snapshot, not a promise of additional continuous trave
 
 ## Planned
 
-- Further accessibility, cross-browser and release validation.
+- Physical-device, Apple Safari and assistive-technology validation.
 - Separately authorized JSON import/export and static deployment.
 
 See the [roadmap](ROADMAP.md) for the staged implementation plan.
@@ -87,6 +87,7 @@ archive with `python scripts/build_browser.py`.
 - [Architecture and API](ARCHITECTURE.md) — current engine details and planned design.
 - [Contributing](CONTRIBUTING.md) — setup, checks, dependencies, and project layout.
 - [Progress record](PROGRESS.md) — completed work, verification, and open issues.
+- [Release-readiness review](docs/RELEASE_READINESS.md) — browser coverage, evidence, and release gates.
 - [Documentation guide](README_START_HERE.md) — reading order for the original requirements.
 
 ## Scope and disclaimer
@@ -94,5 +95,5 @@ archive with `python scripts/build_browser.py`.
 SchengenStay is informational and is not an official tool. It does not grant
 permission to enter or stay, assess visa validity, or resolve residence-permit
 and other special legal circumstances. Representative published Commission
-examples are covered by tests; live-calculator comparison and broader release
-validation remain outstanding.
+examples and twelve live-calculator cases have been compared. These checks are
+not legal certification. Public distribution awaits licensing and release review.

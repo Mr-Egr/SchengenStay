@@ -1,5 +1,95 @@
 # Progress record
 
+## 2026-10-23 — Stage 7 final testing and quality assurance
+
+Started from clean `main`/`origin/main` at `85a0252`. Read the required product,
+architecture, rules, roadmap, progress, frontend and legal-context documents and
+inspected all implemented Python/browser layers and their tests. The full
+[release-readiness checklist](docs/RELEASE_READINESS.md) records PASS, WARNING and
+BLOCKER findings, sources, exact coverage, performance and attribution scope.
+
+### Defects and changes
+
+- Medium: late obsolete-worker errors could stop a replacement; readiness/cancel
+  races could forward canceled work; failed sends left pending timers/queue entries.
+  Added worker-instance guards and normal failure cleanup, with three unit
+  regressions reproduced before fixing. Existing revision guards remain intact.
+- Medium: editing the inspection bound retained old results until blur. Results
+  now invalidate on input without replacing the field; browser regression added.
+- Medium: raw JSON duplicate keys could replace unknown/incomplete context with
+  affirmative fields. Reject all duplicate object names, including nested ones,
+  as structured invalid input. Three regressions reproduced the old positive
+  results; a 300-example malformed-input property checks safe structured responses.
+- Low: package description still said scaffold; metadata now describes the
+  implemented calculator/planner. No core arithmetic, compliance, planner,
+  legal rule, model or date-input component was changed.
+
+New files: `docs/RELEASE_READINESS.md`,
+`tests/fixtures/official_live_2026-10-23.json`, `tests/test_official_live.py`,
+`tests/test_release_boundary.py`, `tests/frontend/release-browser.mjs`.
+
+Modified: Python browser adapter and deterministic archive; frontend app,
+results and worker bridge; native browser reference cases and frontend integration
+tests; CI workflow; package description; README, ARCHITECTURE, CALCULATION_RULES,
+ROADMAP, CONTRIBUTING, docs/FRONTEND and this record.
+
+### Verification actually performed
+
+Windows host, native Python 3.12.14, Node 24.19.0 and Playwright 1.62.1. Downloaded
+test-only Firefox/WebKit into ignored `.tmp/browsers`; no application dependency
+was added. Sandbox temp permission errors were resolved using ignored workspace
+temp directories. The wheel build required its declared isolated setuptools build
+dependency; a no-isolation attempt lacked that build tool, then the normal isolated
+build succeeded. No package or tests were changed to bypass those environment issues.
+
+| Check | Outcome |
+| --- | --- |
+| `python -m pytest -q --hypothesis-show-statistics` | 405 passed in 10.09s; all 389 prior tests retained |
+| Hypothesis | 18 properties; 17 × 200 plus 300 passing examples (3,700 total); generated/discarded candidates are not skipped tests |
+| `ruff check .` | Passed |
+| `python -m pip check` | No broken requirements |
+| `node --test tests/frontend/*.test.mjs` | 36 passed, none skipped |
+| Chrome and Edge interface/date/accessibility suite | 26 checks passed per browser, including real clipboard paste |
+| Chrome, Edge, Firefox and Windows WebKit integration suite | 23 groups and 99 full native-Python/Pyodide comparisons passed per browser |
+| Official manual | Six existing published arithmetic cases reread and matched; derived cases remain labeled |
+| Official live calculator | 12 synthetic standard-short-stay comparisons matched; exact observations recorded in dated fixture |
+| Browser source archive | 58,404-byte canonical ZIP matches source; cross-platform metadata/newline tests pass |
+| Documentation | Local links/anchors and five executable API examples pass |
+| Python wheel | Build succeeds; 11 module payloads match source; metadata/version/Python range correct; no extra package files or runtime requirements |
+| Tracked/candidate file review | No common token/private-key/credential pattern matches or accidental cache/build/temp files |
+
+Full editing journeys, every screen, both languages/themes, 1440/768/390/320px,
+date typing/year replacement/picker, invalid input, context revocation, privacy,
+storage deletion/corruption/reload, stale results, failures/cancellation and retry
+were exercised. Firefox's failure test needed a 90-second observation window for
+the application's unchanged 60-second startup timeout; assertions were retained.
+Installed Chrome/Edge, bundled Firefox and Windows WebKit all completed the tests.
+No physical-device, Apple Safari or screen-reader testing is claimed.
+
+Representative first desktop calculations: Chrome 1.99s, Edge 2.49s, Firefox
+11.59s, WebKit 3.13s. Warm 10,000-occupied-day history: approximately 0.96s, 0.95s,
+8.64s and 1.11s respectively. Exact startup, percentile, mobile-viewport, search
+and scenario timings and cache/workload limitations are in the QA record.
+
+CI retains all Ubuntu/Windows checks and now installs pinned browser tooling to
+run Chromium UI and real Python integration suites on both. The corresponding
+post-push Actions results are checked and reported in delivery, not inferred from
+local success. No checks were disabled, skipped, downgraded or replaced with mocks.
+
+### Remaining gates and stop boundary
+
+Technical checks pass; no reproducible critical/high-severity defect remains
+from the audited cases. Public distribution is **not cleared**: the owner has not
+chosen a project license. Pinned upstream runtime terms and local asset origins
+are inventoried; exact deployment attribution/headers still need review. External
+runtime integrity, untested hardware/assistive technology, cold/limited-network
+guarantees and full transitive tool locking remain documented warnings. Legal
+context is still caller-declared, with unsupported circumstances blocked.
+
+No Stage 8 deployment, repository-visibility change, license invention, release
+publication, account/backend, commercial feature or history rewrite was performed.
+Stop after the verified Stage 7 commit/push for review.
+
 ## 2026-10-23 — Stage 6 context and calculation limitations
 
 Started from clean `main`/`origin/main` at `f09ec43`. Read the product, calculation,

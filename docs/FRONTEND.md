@@ -3,6 +3,8 @@
 Stage 5 connects the seven-screen HTML/CSS/vanilla JavaScript interface to the
 existing Python package using **Pyodide 314.0.7** in a module Web Worker. There is
 no JavaScript day-rule engine, backend, account, telemetry, or public deployment.
+Stage 7 audits and stabilizes this implementation; see
+[release readiness](RELEASE_READINESS.md) for tested environments and open gates.
 
 ## Run locally
 
@@ -99,7 +101,7 @@ saved to browser storage. Editing the check date immediately invalidates results
   `src/schengenstay/*.py`, normalizing UTF-8 text to LF, sorting entries and fixing
   timestamps, permissions and the ZIP creator-system field to Unix on every host.
   Entries use `ZIP_STORED` so zlib versions cannot change the bytes; the current
-  bundle is about 50 KB. CI retains exact byte equality on Windows and Linux. The
+  bundle is about 60 KB. CI retains exact byte equality on Windows and Linux. The
   archive is intentionally committed for direct static serving. It contains no
   bytecode, tests, private data or third-party libraries. After Python changes:
 
@@ -179,7 +181,8 @@ python scripts/build_browser.py --check
 python scripts/check_docs.py
 ```
 
-Browser tooling is test-only **Playwright 1.62.1**. If it is not already available:
+Browser tooling is test-only **Playwright 1.62.1**. CI installs it and Chromium
+on Ubuntu and Windows. If it is not already available locally:
 
 ```sh
 npm install --no-save --package-lock=false playwright@1.62.1
@@ -194,6 +197,14 @@ can select the installed Python 3.12+ interpreter for parity tests (Windows
 otherwise uses `.venv/Scripts/python.exe`, other systems `python`). Both suites
 start/stop their own temporary loopback server and browser. The integration suite
 requires access to the pinned runtime; failed downloads fail the test honestly.
+
+The integration suite also accepts `BROWSER_ENGINE=firefox` or `webkit` after
+`npx playwright install firefox webkit`. Unset `BROWSER_EXECUTABLE` for bundled
+engines. For installed Edge, retain the default Chromium engine and set
+`BROWSER_EXECUTABLE` to its executable. Firefox uses viewport sizing without
+Playwright's unsupported mobile-emulation flag. Windows WebKit is not Apple Safari.
+The interface suite uses Chromium (including Chrome/Edge) for its real clipboard
+checks; cross-engine date/keyboard/responsive journeys are in the integration suite.
 
 `browser.mjs` covers existing CRUD/forms, focus/keyboard, text safety, language,
 theme, seven-screen layouts at 1440/768/390/320 pixels, and startup failure.
@@ -215,8 +226,11 @@ such tests exercise lifecycle handling, not fake successful travel calculations.
 Python tests cover boundary conversion, serialization, authoritative validation,
 all public functions, and a deterministic ISO-date round-trip property. Existing
 Stage 1–3 arithmetic/property/official-fixture tests are unchanged. Browser suites
-are optional local tooling, not currently installed by CI. A local pass does not
-establish remote CI success or broad cross-browser certification.
+now run in CI as well as locally. `release-browser.mjs` adds complete editing
+journeys, cross-engine responsive/date controls, real worker cancellation/retry
+and initialized-worker offline calculation. Stress/parity cases cover 500 records,
+10,000 occupied days, a long bounded search and 100 independent scenarios. A local
+pass does not establish remote CI success or broad cross-browser certification.
 
 ## Troubleshooting and remaining limits
 
@@ -231,11 +245,11 @@ establish remote CI success or broad cross-browser certification.
   an actual exit. Changing history or the check date resets ongoing confirmation.
 - Calendar markers are entered intervals, not an eligibility heatmap. Maximum
   and earliest searches do not silently create or persist trips.
-- Chrome desktop and mobile-sized viewports are checked. Firefox, Safari,
-  physical devices, screen readers and release hardening remain later work.
+- Chrome, Edge, Firefox and Windows WebKit desktop/mobile-sized viewports are
+  checked. Apple Safari, physical devices and screen readers remain unverified.
 - No visa/residence/nationality adjudication or permission to enter/stay. Existing
-  published Commission examples still pass; live official-calculator comparison
-  remains pending. No public deployment has been performed.
+  published Commission examples still pass; twelve live official-calculator cases
+  were compared in Stage 7. No public deployment has been performed.
 
 ## Actual screenshots
 

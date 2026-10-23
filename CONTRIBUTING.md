@@ -134,8 +134,9 @@ PROGRESS.md                    commands, results and remaining work
 The original five requirements documents are preserved. Unit tests cover inclusive
 boundaries, empty/one-day histories, leap/century years, the 90th/91st day, gradual
 expiry, future dates, duplicate coverage, ongoing assumptions, and date extremes.
-Sixteen deterministic property tests each run 200 passing generated examples,
-including the Stage 5 ISO/JSON round trip.
+Seventeen deterministic properties each run 200 passing generated examples,
+plus a 300-example malformed-JSON property. These include the Stage 5 ISO/JSON
+round trip and Stage 6 visa-date consistency checks.
 Synthetic/manual fixtures remain separate from the published example fixture,
 which records source, retrieval date, pages, and the distinction between stated
 examples and derived boundary expectations. Python and Node unit tests run offline; real browser integration loads Pyodide.
@@ -144,11 +145,13 @@ The [European Commission calculator page](https://home-affairs.ec.europa.eu/poli
 was reviewed on 2026-10-22 for the rolling-day principle. The original manual URL
 failed during earlier work and returned HTTP 404 in Stage 2; an accessible official
 copy supplied the six cases now tested. See CALCULATION_RULES.md section 10 for
-the source. Live calculator comparison, broader reference coverage, cross-browser/physical
-device review, and release gates remain open. No license has been selected; choose one before public
+the source. Stage 7 added twelve observed live comparisons, four browser engines/
+products and documented performance/privacy checks; see
+[release readiness](docs/RELEASE_READINESS.md). Apple Safari, physical-device and
+assistive-technology checks remain open. No license has been selected; choose one before public
 distribution rather than assuming licensing terms on the owner's behalf.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 6 stops for review;
+See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 7 stops for review;
 subsequent stages require separate authorization.
 
 Legal-context work must follow [the reviewed source scope](docs/LEGAL_CONTEXT.md).

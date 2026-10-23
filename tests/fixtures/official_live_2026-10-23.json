@@ -1,0 +1,200 @@
+{
+  "source_url": "https://ec.europa.eu/assets/home/visa-calculator-2/calculator.htm",
+  "observed_on": "2026-10-23",
+  "browser": "Chrome 155.0.8059.85 on Windows",
+  "scope": "Synthetic standard countable short stays only. Inputs and mode checked in the live form before calculation. Numeric outputs and verdicts transcribed; no visa entitlement inferred. Continuation starts after the check date for an occupied day, otherwise on the check date. Ordinary compliant Control output does not show used days, so no count was inferred from it.",
+  "cases": [
+    {
+      "name": "live_1_planning",
+      "mode": "planning",
+      "day": "2024-06-19",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-10"
+        ],
+        [
+          "2024-03-01",
+          "2024-03-30"
+        ],
+        [
+          "2024-05-01",
+          "2024-06-09"
+        ]
+      ],
+      "maximum_days": 20
+    },
+    {
+      "name": "live_2_planning",
+      "mode": "planning",
+      "day": "2024-08-07",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-10"
+        ],
+        [
+          "2024-03-01",
+          "2024-03-30"
+        ],
+        [
+          "2024-05-01",
+          "2024-06-09"
+        ]
+      ],
+      "maximum_days": 20
+    },
+    {
+      "name": "live_3_planning",
+      "mode": "planning",
+      "day": "2024-08-08",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-10"
+        ],
+        [
+          "2024-03-01",
+          "2024-03-30"
+        ],
+        [
+          "2024-05-01",
+          "2024-06-09"
+        ]
+      ],
+      "maximum_days": 50
+    },
+    {
+      "name": "live_4_planning",
+      "mode": "planning",
+      "day": "2024-09-08",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-10"
+        ],
+        [
+          "2024-03-01",
+          "2024-03-30"
+        ],
+        [
+          "2024-05-01",
+          "2024-06-09"
+        ]
+      ],
+      "maximum_days": 90
+    },
+    {
+      "name": "live_5_control",
+      "mode": "control",
+      "day": "2024-03-30",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-03-30"
+        ]
+      ],
+      "status": "WITHIN_RULE"
+    },
+    {
+      "name": "live_6_control",
+      "mode": "control",
+      "day": "2024-03-31",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-03-31"
+        ]
+      ],
+      "status": "VIOLATION",
+      "window_start": "2023-10-04",
+      "used_days": 91,
+      "first_violation_date": "2024-03-31"
+    },
+    {
+      "name": "live_7_control",
+      "mode": "control",
+      "day": "2024-03-01",
+      "stays": [
+        [
+          "2024-02-28",
+          "2024-03-01"
+        ]
+      ],
+      "status": "WITHIN_RULE",
+      "continuation_exit": "2024-05-27"
+    },
+    {
+      "name": "live_8_control",
+      "mode": "control",
+      "day": "2024-01-02",
+      "stays": [
+        [
+          "2023-12-30",
+          "2024-01-02"
+        ]
+      ],
+      "status": "WITHIN_RULE",
+      "continuation_exit": "2024-03-28"
+    },
+    {
+      "name": "live_9_control",
+      "mode": "control",
+      "day": "2024-06-28",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-01"
+        ]
+      ],
+      "status": "WITHIN_RULE",
+      "continuation_exit": "2024-09-25"
+    },
+    {
+      "name": "live_10_control",
+      "mode": "control",
+      "day": "2024-06-29",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-01"
+        ]
+      ],
+      "status": "WITHIN_RULE",
+      "continuation_exit": "2024-09-26"
+    },
+    {
+      "name": "live_11_control",
+      "mode": "control",
+      "day": "2024-06-14",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-01"
+        ],
+        [
+          "2024-06-01",
+          "2024-06-14"
+        ]
+      ],
+      "status": "WITHIN_RULE",
+      "continuation_exit": "2024-08-29"
+    },
+    {
+      "name": "live_12_control",
+      "mode": "control",
+      "day": "2024-08-29",
+      "stays": [
+        [
+          "2024-01-01",
+          "2024-01-01"
+        ],
+        [
+          "2024-06-01",
+          "2024-08-29"
+        ]
+      ],
+      "status": "WITHIN_RULE"
+    }
+  ]
+}

@@ -37,3 +37,14 @@ jobs:
         run: python scripts/build_browser.py --check
       - name: Documentation links and examples
         run: python scripts/check_docs.py
+      - name: Install pinned browser test tooling
+        run: npm install --no-save --package-lock=false playwright@1.62.1
+      - name: Install Chromium for browser checks
+        run: npx playwright install --with-deps chromium
+      - name: Browser interface and accessibility checks
+        run: node tests/frontend/browser.mjs
+      - name: Real Python browser integration and release journeys
+        timeout-minutes: 15
+        env:
+          PYTHON_EXECUTABLE: python
+        run: node tests/frontend/python-browser.mjs

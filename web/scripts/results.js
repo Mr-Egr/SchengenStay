@@ -22,7 +22,7 @@ export function contextPanel(ctx) {
   return h('section', { className: 'panel context-panel' }, h('h2', {}, t('context.title')),
     h('div', { className: 'form-grid' },
       checkDate,
-      field('budget', t('context.budget'), { type: 'number', min: 1, max: 10000, step: 1, value: ctx.budget, onChange: event => ctx.setContext('budget', Number(event.target.value)) })),
+      field('budget', t('context.budget'), { type: 'number', min: 1, max: 10000, step: 1, value: ctx.budget, onInput: event => ctx.setBudget(Number(event.target.value)) })),
     checkbox('complete', t('context.complete'), ctx.complete, value => ctx.setContext('complete', value)),
     field('scope', t('context.scope'), { value: ctx.scope, options: ['UNKNOWN', 'COUNTABLE_SHORT_STAYS', 'SPECIAL_LEGAL_CONTEXT', 'VISA_VALIDITY', 'HISTORICAL_GEOGRAPHY'].map(value => [value, t(`context.${value}`)]), onChange: event => ctx.setContext('scope', event.target.value) }),
     legalContextInput(ctx),

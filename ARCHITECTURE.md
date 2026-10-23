@@ -8,6 +8,7 @@
 > [section 16](#16-stage-4-frontend-preview). Implemented Python/browser integration
 > and opt-in persistence are in [section 17](#17-stage-5-pythonbrowser-integration).
 > Deployment remains deferred. Earlier stage sections retain their historical scope.
+> Current QA evidence and release gates: [Stage 7 review](docs/RELEASE_READINESS.md).
 
 ## 1. Architectural goals
 
@@ -664,7 +665,9 @@ Common fields:
 Method-specific fields mirror the Python signatures: `plan: {entry, exit}`;
 `arrival` and `horizon_days`; `length_days`, `search_start` and `horizon_days`;
 or `scenarios: [{entry, exit}, ...]`. Unknown top-level keys, versions or method
-names produce structured `INVALID_INPUT`. Malformed JSON/oversize requests also
+names produce structured `INVALID_INPUT`. Duplicate JSON object names at any
+depth are rejected rather than allowing a later declaration to replace an earlier
+one. Malformed JSON/oversize requests also
 produce `INVALID_INPUT`; unexpected execution failures remain transport failures
 and cannot become arithmetic success. No user-provided Python source is accepted.
 
@@ -853,3 +856,19 @@ avoid occupancy scans. The deterministic archive includes the new Python module
 and is byte-checked on Windows and Ubuntu. Tests cover every context across all
 six methods, date-order properties, unchanged legacy outcomes, mixed histories,
 strict fields, UI blocking, draft privacy and real CPython/Pyodide parity.
+
+## 19. Stage 7 quality assurance
+
+The core occupancy, compliance and planning algorithms remain unchanged. Worker
+callbacks and requests are tied to their originating worker, including across the
+readiness/dispatch microtask boundary; a canceled request cannot reach a replacement.
+Failed message sends clear pending timers through the normal failure path. Input
+revisions continue to prevent obsolete results/errors from reaching the UI.
+Changing the inspection budget invalidates results on input without rerendering
+the control. JSON duplicate-name rejection strengthens the existing version 1
+boundary without changing valid requests or the six-status result contract.
+
+CI now runs real Chromium interface and Python integration checks on both Ubuntu
+and Windows. Release tests exercise Chrome, Edge, Firefox and Windows WebKit
+locally, with exact limitations and timings in [the QA record](docs/RELEASE_READINESS.md).
+No new feature, JavaScript arithmetic, public hosting or visa adjudication was added.

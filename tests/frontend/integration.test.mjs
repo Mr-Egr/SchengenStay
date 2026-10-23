@@ -143,3 +143,45 @@ test('worker queue is bounded without turning overload into a domain result', as
   bridge.cancel();
   assert.deepEqual(await Promise.all(pending), Array(8).fill('CANCELLED'));
 });
+
+test('obsolete worker errors cannot terminate a replacement worker', async () => {
+  const workers = [];
+  const bridge = new PythonBridge({ workerFactory: () => { const worker = fakeWorker(); workers.push(worker); return worker; } });
+  try {
+    const first = bridge.start(); workers[0].send({ type: 'ready' }); await first;
+    bridge.cancel();
+    const second = bridge.start(); workers[1].send({ type: 'ready' }); await second;
+    workers[0].onerror({ preventDefault() {} });
+    assert.equal(bridge.state, 'ready');
+    assert.equal(workers[1].terminated, false);
+  } finally { bridge.cancel(); }
+});
+
+test('cancellation between readiness and dispatch cannot send an old request to a new worker', async () => {
+  const workers = [];
+  const bridge = new PythonBridge({ workerFactory: () => { const worker = fakeWorker(); workers.push(worker); return worker; } });
+  try {
+    const ready = bridge.start(); workers[0].send({ type: 'ready' }); await ready;
+    const old = bridge.request({ marker: 'obsolete' });
+    const rejected = assert.rejects(old, /CANCELLED/);
+    bridge.cancel();
+    const retry = bridge.start(); workers[1].send({ type: 'ready' }); await retry;
+    // Settle an erroneously forwarded request so a regression fails immediately.
+    for (const message of workers[1].messages) workers[1].send({ type: 'result', id: message.id, response: { schema_version: 1, result: {} } });
+    await rejected;
+    assert.equal(workers[1].messages.length, 0);
+    assert.equal(bridge.pending.size, 0);
+  } finally { bridge.cancel(); }
+});
+
+test('a failed worker post clears the queue and permits recovery', async () => {
+  const worker = fakeWorker();
+  worker.postMessage = () => { throw new Error('DataCloneError'); };
+  const bridge = new PythonBridge({ workerFactory: () => worker });
+  try {
+    const ready = bridge.start(); worker.send({ type: 'ready' }); await ready;
+    await assert.rejects(bridge.request({}), /CALCULATION_FAILED/);
+    assert.equal(bridge.pending.size, 0);
+    assert.equal(bridge.state, 'error');
+  } finally { bridge.cancel(); }
+});

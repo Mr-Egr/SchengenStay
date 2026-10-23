@@ -76,14 +76,17 @@ The proven rolling-day engine and planner remain unchanged. See
 results; validation, translated explanations, memory-only visa details, browser
 parity and both CI platforms pass. No visa or residence authorisation is inferred.
 
-## Stage 7 — Final release validation (not started)
+## Stage 7 — Final release validation (QA completed; distribution gate open)
 
-**Tasks, only after authorization:** broader browser/device/accessibility testing,
-official reference review, performance, privacy/storage audit and release checks.
+**Authorized work:** broader browser/accessibility testing, official reference
+review, performance, privacy/storage audit and release checks. These checks and
+focused fixes are recorded in [release readiness](docs/RELEASE_READINESS.md).
+Physical-device/assistive-technology coverage and project licensing remain open.
 JSON import/export still requires separate authorization.
 
-**Done when:** the separately agreed release gates pass and remaining risks are
-reviewed. No public deployment in this stage.
+**Review gate:** technical checks pass in the documented environments; the owner
+must resolve licensing and review remaining warnings before public distribution.
+No public deployment in this stage.
 
 ## Stage 8 — Public deployment (not started)
 
