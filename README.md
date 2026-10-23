@@ -1,99 +1,77 @@
 # SchengenStay
 
-A travel-planning project with a tested Python day-count engine and a responsive
-web interface for organizing Schengen trips.
+A free, privacy-conscious Schengen travel calculator and planner. Real Python
+runs in your browser to explain the standard **90 days in any rolling 180 days**
+rule, including both arrival and departure days.
 
-**Current status: Stage 7 — quality assurance completed; release review pending.**
-The calculator and planner run the real Python package locally through Pyodide.
-There is no deployed application.
+**v1.0.0 release candidate — public deployment verification in progress.**
 
-## The problem
+![SchengenStay desktop overview](docs/images/overview-desktop.png)
 
-Tracking several trips against a rolling 90-in-180-day window is easy to get
-wrong: entry and exit days count, and older days gradually leave the window.
-SchengenStay makes those day counts reproducible through a tested Python library.
+## What it does
 
-## Implemented
+- Organizes completed and ongoing stays with accessible keyboard/calendar date entry.
+- Checks every relevant historical day and explains the first arithmetic violation.
+- Evaluates fixed trips, finds a bounded maximum continuous stay and earliest
+  entry, and compares independent scenarios without changing actual history.
+- Keeps missing information, unsupported legal context and computational limits
+  distinct from successful calculations.
+- Provides seven responsive screens, English/Russian, light/dark themes, and
+  optional local history saving with explicit consent and deletion.
 
-- Inclusive entry/exit dates and strict date parsing, including leap years and
-  calendar boundaries.
-- Unique occupied-day counts and arithmetic remaining for a selected date's
-  180-day window.
-- Validation for malformed dates, duplicate records, and overlapping stays.
-- Ongoing-stay calculations using an explicit check date.
-- Full-history and fixed-itinerary checks with first-violation dates, counts,
-  explanation codes, and separate historical results.
-- Bounded maximum-stay and earliest-entry searches, plus independent comparison
-  of hypothetical trips without changing actual history.
-- Explicit outcomes for invalid input, incomplete information, unsupported scope,
-  and bounded inspections.
-- Unit and property-based tests, plus a GitHub Actions workflow for automated checks.
-- Responsive English/Russian interface with trip editing, tentative scenarios,
-  calendar views, and light/dark themes. History saving is local and opt-in.
-- Background Python calculations, explicit scope/completeness confirmations,
-  translated explanations, and recoverable loading errors.
-- Specific blocking results for uncertain or unsupported visa/residence contexts;
-  optional visa-date consistency checks, without visa adjudication.
+Travel records are processed locally. No accounts, analytics, ads, paid APIs or
+application backend. Runtime downloads still contact the hosting/CDN providers.
+See the [mobile screenshot](docs/images/overview-mobile.png).
 
-The engine operates on dates already identified as countable short stays. Its
-remaining-day figure is a snapshot, not a promise of additional continuous travel.
+## Engineering
 
-## Planned
+**Python 3.12+ · Pyodide / WebAssembly · Web Workers · HTML/CSS · vanilla JavaScript**
 
-- Physical-device, Apple Safari and assistive-technology validation.
-- Separately authorized JSON import/export and static deployment.
+A validated JSON bridge connects the UI to one pure-Python engine; there is no
+second day-rule implementation in JavaScript. Immutable models, bounded searches,
+worker cancellation and stale-response protection keep results interpretable.
+GitHub Actions checks Windows and Ubuntu before publishing the tested static artifact.
 
-See the [roadmap](ROADMAP.md) for the staged implementation plan.
+Verification includes **411 Python tests**, **18 Hypothesis properties**, **36
+frontend unit tests**, real-browser journeys, and **99 CPython/Pyodide parity
+comparisons**. Six published Commission examples and twelve live-calculator cases
+were checked in Stage 7. Exact coverage and limitations are in the
+[QA record](docs/RELEASE_READINESS.md).
 
-## Tech stack
+## Run locally
 
-**Python 3.12+**, standard-library date arithmetic and immutable data models;
-**Pyodide 314.0.7**, **HTML, CSS, and vanilla JavaScript ES modules**; **pytest**, **Hypothesis**, and
-**Ruff** for Python checks; Node's built-in frontend tests; **GitHub Actions** for CI.
-No frontend framework, bundler, backend, or paid services. The Python library has
-no third-party dependencies; the browser downloads the pinned Pyodide runtime.
+Python 3.12+; from the repository root:
 
-## Quick start
-
-From the repository root with Python 3.12+ (PowerShell):
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\ruff.exe check .
-.\.venv\Scripts\python.exe -m pip check
+```sh
+python -m pip install -r requirements-dev.txt
+python -m pip install --no-build-isolation --no-deps -e .
+python -m http.server 8765 --bind 127.0.0.1 --directory web
 ```
 
-For macOS/Linux setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-For Python examples, see the [planner API](ARCHITECTURE.md#15-stage-3-travel-planner).
+Open [localhost:8765](http://127.0.0.1:8765). Use a virtual environment; see
+[platform-specific setup](CONTRIBUTING.md). Initial Python loading needs internet access.
 
-Run the integrated application locally:
-
-```powershell
-.\.venv\Scripts\python.exe -m http.server 8765 --bind 127.0.0.1 --directory web
+```sh
+python -m pytest -q
+ruff check .
+python -m pip check
+node --test tests/frontend/*.test.mjs
+python scripts/build_browser.py --check
+python scripts/check_docs.py
 ```
 
-Open [localhost:8765](http://127.0.0.1:8765). See the [frontend guide](docs/FRONTEND.md)
-for screenshots, checks, loading troubleshooting, and privacy details. Initial
-Python loading needs internet access. After editing Python, regenerate its static
-archive with `python scripts/build_browser.py`.
+## Documentation and scope
 
-## Documentation
+[Architecture & APIs](ARCHITECTURE.md) · [Calculation rules](CALCULATION_RULES.md) ·
+[Legal limitations](docs/LEGAL_CONTEXT.md) · [Browser guide](docs/FRONTEND.md) ·
+[Deployment & attribution](docs/DEPLOYMENT.md) · [Progress](PROGRESS.md) ·
+[Roadmap](ROADMAP.md)
 
-- [Product requirements](PRODUCT.md) — intended users, scope, and V1 goals.
-- [Calculation rules](CALCULATION_RULES.md) — date semantics and unsupported cases.
-- [Context and limitations](docs/LEGAL_CONTEXT.md) — supported questions and official sources.
-- [Architecture and API](ARCHITECTURE.md) — current engine details and planned design.
-- [Contributing](CONTRIBUTING.md) — setup, checks, dependencies, and project layout.
-- [Progress record](PROGRESS.md) — completed work, verification, and open issues.
-- [Release-readiness review](docs/RELEASE_READINESS.md) — browser coverage, evidence, and release gates.
-- [Documentation guide](README_START_HERE.md) — reading order for the original requirements.
+SchengenStay is independent and informational. It **does not grant permission to
+enter or stay**, assess visa validity, or adjudicate residence and other special
+legal circumstances. Arithmetic days remaining are not a guaranteed future stay.
+JSON import/export and guaranteed offline use are not implemented. Physical-device,
+Apple Safari and screen-reader validation remain open.
 
-## Scope and disclaimer
-
-SchengenStay is informational and is not an official tool. It does not grant
-permission to enter or stay, assess visa validity, or resolve residence-permit
-and other special legal circumstances. Representative published Commission
-examples and twelve live-calculator cases have been compared. These checks are
-not legal certification. Public distribution awaits licensing and release review.
+Original project code is [MIT licensed](LICENSE), copyright 2026 Egor Kibishev.
+[Third-party components retain their own licenses](web/THIRD_PARTY_NOTICES.txt).

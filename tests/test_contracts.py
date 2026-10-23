@@ -1,7 +1,7 @@
 """Stage 0 packaging and public wire-contract checks, not arithmetic tests."""
 
 import json
-from importlib.metadata import version
+from importlib.metadata import metadata, version
 
 import pytest
 
@@ -9,7 +9,8 @@ from schengenstay import ResultStatus
 
 
 def test_installed_distribution_is_available():
-    assert version("schengenstay") == "0.1.0"
+    assert version("schengenstay") == "1.0.0"
+    assert metadata("schengenstay")["License-Expression"] == "MIT"
 
 
 def test_status_vocabulary_matches_calculation_rules():

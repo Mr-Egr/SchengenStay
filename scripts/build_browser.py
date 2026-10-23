@@ -14,8 +14,10 @@ def archive_bytes(source_dir: Path = ROOT / "src/schengenstay") -> bytes:
     # This small source bundle must compare byte-for-byte across hosts. Stored
     # entries avoid compressor-version differences; all metadata is canonical.
     with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as archive:
-        for path in sorted(source_dir.glob("*.py")):
-            info = zipfile.ZipInfo(f"schengenstay/{path.name}", (2026, 1, 1, 0, 0, 0))
+        files = {f"schengenstay/{path.name}": path for path in source_dir.glob("*.py")}
+        files["LICENSE"] = ROOT / "LICENSE"
+        for name, path in sorted(files.items()):
+            info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
             info.create_system = 3  # Unix metadata on every build host, including Windows.
             info.compress_type = zipfile.ZIP_STORED
             info.external_attr = 0o644 << 16

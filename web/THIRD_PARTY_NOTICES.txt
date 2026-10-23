@@ -1,0 +1,44 @@
+SchengenStay — third-party notices (reviewed 23 October 2026)
+
+Original SchengenStay code, documentation, SVG artwork, icon paths and screenshots
+are copyright (c) 2026 Egor Kibishev, under the MIT License in LICENSE.txt.
+The project's MIT grant does not relicense the third-party materials below.
+Screenshots contain synthetic demonstration records, never personal travel data.
+Fonts are system fonts: no font files, stock illustrations or EU logos are bundled.
+
+PYODIDE 314.0.7
+Copyright belongs to the Pyodide contributors. Unmodified runtime assets are
+downloaded directly by the browser from:
+https://cdn.jsdelivr.net/pyodide/v314.0.7/full/
+These runtime binaries are not copied into this repository or the Pages artifact.
+The exact upstream Pyodide project license is Mozilla Public License 2.0 (MPL-2.0).
+License copy: licenses/PYODIDE-MPL-2.0.txt
+Original license: https://github.com/pyodide/pyodide/blob/314.0.7/LICENSE
+Corresponding source: https://github.com/pyodide/pyodide/tree/314.0.7
+Source archive: https://github.com/pyodide/pyodide/archive/refs/tags/314.0.7.tar.gz
+You may obtain and modify the covered source under that license. The original
+copyright/license notices remain in the unmodified upstream distribution.
+
+CPYTHON AND EMSCRIPTEN
+The pinned runtime metadata identifies CPython 3.14.2 and Emscripten 5.0.3.
+CPython and its incorporated components retain their own notices and licenses;
+Pyodide's MPL is not a blanket license for every runtime component.
+CPython license copy: licenses/CPYTHON-3.14.2.txt
+Source and acknowledgements: https://github.com/python/cpython/tree/v3.14.2
+https://docs.python.org/3.14/license.html
+Emscripten is MIT/NCSA dual licensed; its runtime components retain upstream terms.
+License copy: licenses/EMSCRIPTEN-5.0.3.txt
+Source: https://github.com/emscripten-core/emscripten/tree/5.0.3
+No optional third-party Python packages are installed by SchengenStay.
+
+DEVELOPMENT TOOLS (NOT SHIPPED AS APPLICATION ASSETS)
+Playwright 1.62.1 is Apache-2.0 licensed:
+https://github.com/microsoft/playwright/blob/v1.62.1/LICENSE
+Python test/build tooling and GitHub Actions remain separately licensed tools.
+See requirements-dev.txt, package-lock.json and the deployment guide in the source
+repository for exact pins. No application dependency is claimed as original work.
+
+REFERENCES
+European Commission calculator examples are cited as numerical verification
+evidence. No Commission code, interface, PDF, logo or screenshot is redistributed.
+SchengenStay is independent; no endorsement or immigration permission is implied.

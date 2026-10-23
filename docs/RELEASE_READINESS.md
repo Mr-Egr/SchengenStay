@@ -1,5 +1,10 @@
 # Stage 7 release-readiness record
 
+**Stage 8 update:** the owner has now approved MIT licensing (2026 Egor Kibishev)
+and public GitHub Pages release. LICENSE and package notices resolve the license
+decision below. The Stage 7 evidence is preserved as a historical record;
+[Stage 8 publication evidence](DEPLOYMENT.md) records the subsequent gates.
+
 Reviewed 23 October 2026, starting at `85a0252`. This is a QA record, not a
 deployment approval, legal certification or guarantee of error-free software.
 Stages 0–6 source, contracts, browser state, worker, storage and existing tests

@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const browserName = process.env.BROWSER_ENGINE || 'chromium';
 const browserType = require('playwright')[browserName];
 assert.ok(['chromium', 'firefox', 'webkit'].includes(browserName), 'Unsupported BROWSER_ENGINE');
-const root = resolve('web');
+const root = resolve(process.env.WEB_ROOT || 'web');
 const server = createServer(async (request, response) => {
   const rawPath = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   const pathname = rawPath.replace(/^\/SchengenStay/, '') || '/';
@@ -23,7 +23,8 @@ const server = createServer(async (request, response) => {
   } catch { response.writeHead(404).end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const origin = `http://127.0.0.1:${server.address().port}/SchengenStay/`;
+const origin = process.env.SITE_URL || `http://127.0.0.1:${server.address().port}/SchengenStay/`;
+assert.ok(origin.endsWith('/'), 'SITE_URL must end with / for repository-relative imports');
 let browser;
 let checks = 0;
 async function check(name, body) {

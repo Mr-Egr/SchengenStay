@@ -7,7 +7,7 @@
 > in [section 15](#15-stage-3-travel-planner). The frontend preview is documented in
 > [section 16](#16-stage-4-frontend-preview). Implemented Python/browser integration
 > and opt-in persistence are in [section 17](#17-stage-5-pythonbrowser-integration).
-> Deployment remains deferred. Earlier stage sections retain their historical scope.
+> Stage 8 deployment preparation is in section 20. Earlier stage sections retain their historical scope.
 > Current QA evidence and release gates: [Stage 7 review](docs/RELEASE_READINESS.md).
 
 ## 1. Architectural goals
@@ -872,3 +872,23 @@ CI now runs real Chromium interface and Python integration checks on both Ubuntu
 and Windows. Release tests exercise Chrome, Edge, Firefox and Windows WebKit
 locally, with exact limitations and timings in [the QA record](docs/RELEASE_READINESS.md).
 No new feature, JavaScript arithmetic, public hosting or visa adjudication was added.
+
+## 20. Stage 8 static release pipeline
+
+The owner approved MIT licensing, public GitHub source and free GitHub Pages.
+The core Python algorithms and JSON contract are unchanged. Version 1.0.0 package
+metadata and the browser source ZIP carry the MIT license; separate notices retain
+third-party runtime ownership. The website footer exposes those notices in EN/RU.
+
+`scripts/build_site.py` produces a deterministic allowlisted `dist/site` with a
+SHA-256 asset manifest. Only application assets and license texts are included;
+unknown files or stale source ZIPs fail the build. Both CI platforms test that
+directory under `/SchengenStay/` using the existing full browser suites. A manual
+publishing run waits for both successful checks and deploys the uploaded tested
+artifact with scoped Pages/OIDC permissions. PRs, ordinary pushes and tags cannot
+publish. Dependencies and official top-level action commits are pinned.
+
+Public URL, production evidence, privacy/header limitations, attribution and
+maintainer publishing instructions are in [deployment](docs/DEPLOYMENT.md).
+The app retains lazy CDN runtime loading, in-memory defaults, consent-based local
+saving and no travel-data network submission. No backend or new calculation feature.

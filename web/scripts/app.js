@@ -142,7 +142,8 @@ function render(focus = false) {
     if (menuOpen) nav.querySelector('a').focus();
   }, { kind: 'icon-button mobile-menu', symbol: 'menu', 'aria-controls': 'main-navigation', 'aria-expanded': String(menuOpen), 'aria-label': t('app.menu') });
   const main = h('main', { id: 'main', tabindex: '-1' }, routes[current](ctx),
-    h('footer', { className: 'page-footer' }, h('p', {}, t('app.footer')), h('p', {}, t('app.legal'))));
+    h('footer', { className: 'page-footer' }, h('p', {}, t('app.footer')), h('p', {}, t('app.legal')),
+      h('a', { href: './THIRD_PARTY_NOTICES.txt', target: '_blank', rel: 'noopener noreferrer' }, t('app.licenses'))));
   const replacement = editingDate && main.querySelector(`#${CSS.escape(editingDate.id)}`);
   if (replacement && editingDate.dataset.language === state.language) replacement.replaceWith(editingDate);
   document.getElementById('app').replaceChildren(h('div', { className: `app-shell ${menuOpen ? 'menu-open' : ''}` }, sidebar,

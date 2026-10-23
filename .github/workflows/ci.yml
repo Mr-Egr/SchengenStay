@@ -3,6 +3,12 @@ name: Project checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified main build to GitHub Pages
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -16,35 +22,76 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Install package and development tools
-        run: python -m pip install -e ".[dev]"
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip install --no-build-isolation --no-deps -e .
       - name: Check dependencies
         run: python -m pip check
       - name: Lint
         run: ruff check .
       - name: Test
         run: python -m pytest -q
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: Frontend unit and static checks
         run: node --test tests/frontend/*.test.mjs
       - name: Browser Python source archive consistency
         run: python scripts/build_browser.py --check
       - name: Documentation links and examples
         run: python scripts/check_docs.py
+      - name: Publication source and history scan
+        run: python scripts/audit_publication.py
+      - name: Build and verify allowlisted production files
+        run: |
+          python scripts/build_site.py
+          python scripts/build_site.py --check
       - name: Install pinned browser test tooling
-        run: npm install --no-save --package-lock=false playwright@1.62.1
+        run: npm ci --ignore-scripts
       - name: Install Chromium for browser checks
         run: npx playwright install --with-deps chromium
       - name: Browser interface and accessibility checks
+        env:
+          WEB_ROOT: dist/site
         run: node tests/frontend/browser.mjs
       - name: Real Python browser integration and release journeys
         timeout-minutes: 15
         env:
           PYTHON_EXECUTABLE: python
+          WEB_ROOT: dist/site
         run: node tests/frontend/python-browser.mjs
+      - name: Upload the exact tested Pages directory
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist/site
+
+  deploy:
+    name: Publish verified GitHub Pages artifact
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Read configured Pages settings
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Publish artifact verified by both operating systems
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

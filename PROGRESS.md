@@ -1,5 +1,64 @@
 # Progress record
 
+## 2026-10-23 — Stage 8 deployment and portfolio release
+
+Started at clean, synchronized `5b44e94`. Read the specifications, implementation,
+Stage 7 evidence and legal-context sources. The owner explicitly approved MIT
+(2026 Egor Kibishev), public GitHub source, free GitHub Pages and a final v1.0.0
+only after independent production verification. No commercial or calculation
+feature is added; the core Python algorithms and six-status contract are unchanged.
+
+### Preparation and local evidence
+
+- Added standard MIT LICENSE, matching package/website/ZIP notices and 1.0.0
+  candidate metadata. Verified exact Pyodide MPL-2.0, CPython 3.14.2 and Emscripten
+  5.0.3 upstream notices/source links. Original artwork/system fonts require no
+  imported stock/font license. Runtime binaries remain on the pinned CDN.
+- Added exact Python build/test pins and npm integrity lockfile; top-level
+  official CI actions use verified commit SHAs and Node 24 runtimes.
+- Added allowlisted deterministic build: 28 files, 265,648 bytes, no dev artifacts,
+  with SHA-256 manifest, stale ZIP checks and no recursive output cleanup.
+- Extended existing browser suites to test the built directory under the repository
+  subpath or a supplied real Pages URL. The first interface run exposed a test
+  harness trailing-slash assumption; corrected navigation without weakening its
+  same-prefix network assertion or changing application paths.
+- Added six build regressions for reproducibility, manifests, leaked/unreviewed
+  files, corrupt output and license drift. Updated archive tests to retain all
+  canonical-byte/metadata assertions while requiring its MIT notice.
+- Initial publication scan: all 187 reachable historical blobs and candidate
+  files, including ZIP payloads, no credential/private-path matches. Inspected
+  all four historical PNG variants; no personal records or embedded metadata.
+  Ordinary author identity/email remains part of the intentionally preserved
+  public Git history. No identity documents or personal travel histories found.
+
+Actual local checks: **411 pytest tests** (18 Hypothesis properties / 3,700 passing
+examples), **36 frontend unit tests**, Ruff, pip consistency, deterministic source
+archive/build and documentation links/examples passed. Chrome 155 and Edge 155:
+**26 UI/date/accessibility groups each**. Chrome, Edge, Firefox 153 and Windows
+WebKit 26.5: **23 real integration groups + 99 full Python/Pyodide comparisons each**
+against the production build. Both languages/themes, seven screens, responsive
+viewports, privacy/context gates, cancellation and failure paths remain covered.
+The wheel's 1.0.0/MIT metadata, license and all 11 original module payloads pass.
+
+Local npm was absent from PATH; used integrity-verified official npm in ignored
+temporary tooling to create the lockfile (audit reported zero vulnerabilities).
+A sandbox temp-directory permission error interrupted the first wheel command;
+using an ignored workspace TEMP/TMP allowed the same build/check to pass. No
+application behavior or test was changed to bypass these environment issues.
+
+New files: LICENSE, requirements-dev.txt, package-lock.json, scripts/build_site.py,
+scripts/audit_publication.py, tests/test_site_build.py, docs/DEPLOYMENT.md,
+web/LICENSE.txt, web/THIRD_PARTY_NOTICES.txt, three web/licenses texts and an actual
+date-picker screenshot. Updated metadata, CI, browser harnesses, archive packaging,
+notices footer/referrer policy, portfolio screenshots and relevant documentation.
+
+### Publication evidence
+
+Pending remote quality checks, visibility/Pages settings, public-site verification
+and release. Preparation does not claim publication or a successful final release.
+Exact commands, permission boundaries and remaining limitations:
+[deployment guide](docs/DEPLOYMENT.md). No Stage 9 work is authorized.
+
 ## 2026-10-23 — Stage 7 final testing and quality assurance
 
 Started from clean `main`/`origin/main` at `85a0252`. Read the required product,

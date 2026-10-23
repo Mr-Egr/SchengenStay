@@ -7,9 +7,9 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
-const root = resolve('web');
+const root = resolve(process.env.WEB_ROOT || 'web');
 const server = createServer(async (request, response) => {
-  const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+  const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname).replace(/^\/SchengenStay/, '') || '/';
   const file = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
   if (!file.startsWith(root + sep)) { response.writeHead(403).end(); return; }
   try {
@@ -18,7 +18,7 @@ const server = createServer(async (request, response) => {
   } catch { response.writeHead(404).end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const origin = `http://127.0.0.1:${server.address().port}`;
+const origin = (process.env.SITE_URL || `http://127.0.0.1:${server.address().port}/SchengenStay/`).replace(/\/$/, '');
 let browser;
 let checks = 0;
 async function check(name, body) {
@@ -44,7 +44,7 @@ try {
   const fillDates = async (entry, exit) => { await page.locator('#field-entry').fill(entry); await page.locator('#field-exit').fill(exit); };
 
   await check('empty dashboard requires explicit calculation context', async () => {
-    await page.goto(origin);
+    await page.goto(`${origin}/`);
     await page.waitForSelector('h1');
     assert.equal(await page.locator('.metric.used .metric-value').innerText(), '—');
     assert.equal(await page.locator('.metric.remaining .metric-value').innerText(), '—');
@@ -274,7 +274,7 @@ try {
   await check('a failed module load shows an honest startup error', async () => {
     const failed = await context.newPage();
     await failed.route('**/scripts/app.js', route => route.abort());
-    await failed.goto(origin);
+    await failed.goto(`${origin}/`);
     await failed.getByRole('heading', { name: 'The workspace could not open.' }).waitFor();
     assert.equal(await failed.getByRole('button', { name: 'Reload interface' }).count(), 1);
     await failed.close();
@@ -283,7 +283,7 @@ try {
   if (process.env.SCREENSHOT_DIR) {
     await mkdir(process.env.SCREENSHOT_DIR, { recursive: true });
     await page.setViewportSize({ width: 1440, height: 1080 });
-    await page.goto(origin);
+    await page.goto(`${origin}/`);
     await page.waitForSelector('h1');
     await page.screenshot({ path: resolve(process.env.SCREENSHOT_DIR, 'overview-desktop.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });

@@ -10,7 +10,8 @@ calculation logic. See ARCHITECTURE.md sections 14–17 and the
 ## Local workflow
 
 1. Use Python 3.12+ and the setup instructions below to create an isolated `.venv`.
-2. Install the package and its development extra: `python -m pip install -e ".[dev]"`.
+2. Install `requirements-dev.txt`, then install the local package with
+   `python -m pip install --no-build-isolation --no-deps -e .`.
 3. Before changing a future algorithm, add tests for its intended behavior.
 4. Run `python -m pip check`, `python -m pytest -q`, and `ruff check .` with that
    environment. Also run `node --test tests/frontend/*.test.mjs` with Node 22+
@@ -48,7 +49,7 @@ GitHub Actions uses the commands above on both Ubuntu and Windows with Python
 3.12 and Node 22. Browser checks
 are separate optional local checks using Playwright; see the frontend guide.
 A local pass does not prove that a remote workflow ran; report these separately.
-No deployment is configured.
+Stage 8 adds explicit, quality-gated GitHub Pages publishing; see docs/DEPLOYMENT.md.
 
 
 ## Environment setup
@@ -61,7 +62,8 @@ PowerShell, from the repository root:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install --no-build-isolation --no-deps -e .
 .\.venv\Scripts\python.exe -m pip check
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\ruff.exe check .
@@ -71,7 +73,8 @@ No activation or PowerShell execution-policy change is required. On macOS/Linux:
 
 ```sh
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pip install --no-build-isolation --no-deps -e .
 .venv/bin/python -m pip check
 .venv/bin/python -m pytest -q
 .venv/bin/ruff check .
@@ -92,14 +95,16 @@ and initial runtime downloads; it needs no account, API key, or paid service.
 - Development: pytest for unit tests, Ruff for linting, and Hypothesis for
   property-based arithmetic tests against an independent date-set oracle.
 
-The three development tools are pinned to the versions verified locally in
-`pyproject.toml`; transitive and build dependencies are not fully locked yet.
+Python development/build dependencies are exact-pinned in `requirements-dev.txt`;
+Playwright and its test dependencies use `package-lock.json`. The pure-Python
+application still has no runtime dependencies.
 GitHub Actions runs the same checks on both operating systems for pushes and pull
 requests. The browser source archive uses canonical metadata and uncompressed ZIP
 entries, so the byte-for-byte source check is independent of the build host and
 zlib version. Archive tests cover Windows/Linux/macOS metadata defaults and LF/CRLF
 checkouts. Do not regenerate it during CI to hide a stale committed artifact.
-No checks are skipped or downgraded, and CI does not deploy anything.
+No checks are skipped or downgraded. An explicit publishing run deploys the
+production artifact only after both operating systems pass every check.
 
 ## File map and verification scope
 
@@ -148,11 +153,12 @@ copy supplied the six cases now tested. See CALCULATION_RULES.md section 10 for
 the source. Stage 7 added twelve observed live comparisons, four browser engines/
 products and documented performance/privacy checks; see
 [release readiness](docs/RELEASE_READINESS.md). Apple Safari, physical-device and
-assistive-technology checks remain open. No license has been selected; choose one before public
-distribution rather than assuming licensing terms on the owner's behalf.
+assistive-technology checks remain open. The owner approved the MIT license in Stage 8; retain all original and third-party
+notices when distributing copies.
 
-See [PROGRESS.md](PROGRESS.md) for recorded check results. Stage 7 stops for review;
-subsequent stages require separate authorization.
+See [PROGRESS.md](PROGRESS.md) for recorded check results and
+[deployment](docs/DEPLOYMENT.md) for publishing gates. Do not publish a release
+until its actual public site has been independently verified.
 
 Legal-context work must follow [the reviewed source scope](docs/LEGAL_CONTEXT.md).
 Do not infer countability from notes, classify mixed permit/short-stay periods,

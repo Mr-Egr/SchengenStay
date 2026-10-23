@@ -1,6 +1,7 @@
 // Presentation-only vocabulary. Codes come from Python, never from JS arithmetic.
 export const integrationMessages = { en: {}, ru: {} };
 const copy = {
+  'app.licenses': ['License & third-party notices', 'Лицензия и сторонние компоненты'],
   'date.format': ['DD/MM/YYYY', 'ДД.ММ.ГГГГ'],
   'date.hint': ['DD/MM/YYYY. You can also paste a complete YYYY-MM-DD date.', 'ДД.ММ.ГГГГ. Можно также вставить полную дату ГГГГ-ММ-ДД.'],
   'date.open': ['Open calendar', 'Открыть календарь'], 'date.close': ['Close calendar', 'Закрыть календарь'],

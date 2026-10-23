@@ -29,14 +29,16 @@ def test_archive_is_identical_across_platforms_and_checkout_line_endings(tmp_pat
             builds.extend(archive_bytes(source_dir) for source_dir in (lf, crlf))
     assert all(build == builds[0] for build in builds)
     with zipfile.ZipFile(io.BytesIO(builds[0])) as archive:
-        assert archive.namelist() == [f"schengenstay/{name}" for name in sorted(sources)]
+        assert archive.namelist() == ["LICENSE", *[f"schengenstay/{n}" for n in sorted(sources)]]
         for info in archive.infolist():
             assert info.create_system == 3
             assert info.compress_type == zipfile.ZIP_STORED
             assert info.date_time == (2026, 1, 1, 0, 0, 0)
             assert info.external_attr == 0o644 << 16
             assert info.extra == info.comment == b""
-            assert archive.read(info) == sources[Path(info.filename).name].encode("utf-8")
+            expected = ((ROOT / "LICENSE").read_text(encoding="utf-8")
+                        if info.filename == "LICENSE" else sources[Path(info.filename).name])
+            assert archive.read(info) == expected.encode("utf-8")
 
 
 def test_source_changes_still_change_archive_bytes(tmp_path):

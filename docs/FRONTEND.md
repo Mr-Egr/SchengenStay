@@ -2,7 +2,9 @@
 
 Stage 5 connects the seven-screen HTML/CSS/vanilla JavaScript interface to the
 existing Python package using **Pyodide 314.0.7** in a module Web Worker. There is
-no JavaScript day-rule engine, backend, account, telemetry, or public deployment.
+no JavaScript day-rule engine, backend, account or telemetry.
+Stage 8 production build/publishing instructions and actual verification are in
+[the deployment guide](DEPLOYMENT.md).
 Stage 7 audits and stabilizes this implementation; see
 [release readiness](RELEASE_READINESS.md) for tested environments and open gates.
 
@@ -185,7 +187,7 @@ Browser tooling is test-only **Playwright 1.62.1**. CI installs it and Chromium
 on Ubuntu and Windows. If it is not already available locally:
 
 ```sh
-npm install --no-save --package-lock=false playwright@1.62.1
+npm ci --ignore-scripts
 npx playwright install chromium
 node tests/frontend/browser.mjs
 node tests/frontend/python-browser.mjs
@@ -249,15 +251,16 @@ pass does not establish remote CI success or broad cross-browser certification.
   checked. Apple Safari, physical devices and screen readers remain unverified.
 - No visa/residence/nationality adjudication or permission to enter/stay. Existing
   published Commission examples still pass; twelve live official-calculator cases
-  were compared in Stage 7. No public deployment has been performed.
+  were compared in Stage 7. Public deployment status is in the deployment guide.
 
 ## Actual screenshots
 
-Empty-first Stage 5 workspace, captured in Chrome with the interface test clock
+Empty-first Stage 8 build, captured in Chrome with the interface test clock
 set to 23 October 2026. No invented calculation values or personal history:
 
 - [Desktop overview](images/overview-desktop.png)
 - [Mobile overview](images/overview-mobile.png)
+- [Russian date picker, mobile dark theme](images/date-picker-mobile-ru-dark.png)
 
 Exact local verification evidence and remaining work are in
 [PROGRESS.md](../PROGRESS.md).

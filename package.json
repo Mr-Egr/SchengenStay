@@ -1,8 +1,11 @@
 {
   "name": "schengenstay-frontend",
   "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
   "type": "module",
   "engines": { "node": ">=22" },
+  "devDependencies": { "playwright": "1.62.1" },
   "scripts": {
     "test": "node --test tests/frontend/*.test.mjs",
     "test:browser": "node tests/frontend/browser.mjs",

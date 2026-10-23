@@ -88,12 +88,17 @@ JSON import/export still requires separate authorization.
 must resolve licensing and review remaining warnings before public distribution.
 No public deployment in this stage.
 
-## Stage 8 — Public deployment (not started)
+## Stage 8 — Public deployment (authorized; verification in progress)
 
 **Tasks, only after authorization:** deploy to free static hosting after release
 validation, verify the public URL, and publish accurate documentation/screenshots.
 
 **Done when:** CI green, public URL verified, no misleading 'legal permission' claims, tested use cases documented, release tagged.
+
+The owner approved MIT (2026 Egor Kibishev), public repository visibility, free
+GitHub Pages and a v1.0.0 release only after production verification. The release
+pipeline and evidence are in [deployment](docs/DEPLOYMENT.md). Import/export and
+commercial features remain outside this authorization.
 
 ## Stage 9 — Optional features, only after V1
 
