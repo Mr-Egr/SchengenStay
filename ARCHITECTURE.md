@@ -766,7 +766,7 @@ validated before atomic restoration. Scope/complete/ongoing declarations, result
 and hypothetical scenarios are intentionally not persisted. Disabling saving
 removes only this app's saved key; memory records remain until reload. Storage
 errors, including failed deletion, are visible. Labels and notes use text nodes.
-JSON import/export remains Stage 7.
+JSON import/export remains deferred to separate authorization.
 
 Tests exercise the unchanged domain APIs through JSON, real Pyodide, and UI forms.
 Direct CPython reference outputs are compared recursively with browser worker

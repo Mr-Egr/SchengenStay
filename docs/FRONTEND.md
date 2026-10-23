@@ -100,12 +100,12 @@ saved to browser storage. Editing the check date immediately invalidates results
   callable, never interpolated into Python source. Labels/notes are not sent to
   the calculation worker. No dynamic package installation is needed.
 - `scripts/build_browser.py` creates that small deterministic archive from **all**
-  `src/schengenstay/*.py`, normalizing UTF-8 text to LF, sorting entries and fixing
+  `src/schengenstay/*.py` plus MIT LICENSE, normalizing UTF-8 text to LF, sorting entries and fixing
   timestamps, permissions and the ZIP creator-system field to Unix on every host.
   Entries use `ZIP_STORED` so zlib versions cannot change the bytes; the current
   bundle is about 60 KB. CI retains exact byte equality on Windows and Linux. The
   archive is intentionally committed for direct static serving. It contains no
-  bytecode, tests, private data or third-party libraries. After Python changes:
+  bytecode, tests, private data or third-party libraries. After Python/license changes:
 
 ```sh
 python scripts/build_browser.py

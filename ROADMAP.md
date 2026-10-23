@@ -88,7 +88,7 @@ JSON import/export still requires separate authorization.
 must resolve licensing and review remaining warnings before public distribution.
 No public deployment in this stage.
 
-## Stage 8 — Public deployment (authorized; verification in progress)
+## Stage 8 — Public deployment (public site verified)
 
 **Tasks, only after authorization:** deploy to free static hosting after release
 validation, verify the public URL, and publish accurate documentation/screenshots.
@@ -99,6 +99,10 @@ The owner approved MIT (2026 Egor Kibishev), public repository visibility, free
 GitHub Pages and a v1.0.0 release only after production verification. The release
 pipeline and evidence are in [deployment](docs/DEPLOYMENT.md). Import/export and
 commercial features remain outside this authorization.
+
+The public Pages URL passed anonymous production UI and real Python/parity tests;
+Ubuntu/Windows and Pages deployment checks passed. The release tag is created
+after the final evidence commit passes CI. No Stage 9 work is started.
 
 ## Stage 9 — Optional features, only after V1
 

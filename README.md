@@ -4,7 +4,7 @@ A free, privacy-conscious Schengen travel calculator and planner. Real Python
 runs in your browser to explain the standard **90 days in any rolling 180 days**
 rule, including both arrival and departure days.
 
-**v1.0.0 release candidate — public deployment verification in progress.**
+**[Live application](https://mr-egr.github.io/SchengenStay/)** · Free to use, no account required.
 
 ![SchengenStay desktop overview](docs/images/overview-desktop.png)
 

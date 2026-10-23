@@ -132,6 +132,50 @@ Playwright is Apache-2.0; its binaries and npm tree are excluded from deployment
 
 ## Production verification record
 
-Pending actual publication and independent verification. No release success or
-live URL is claimed by this preparation record. See PROGRESS.md for execution
-results and the final GitHub Actions/Pages evidence when available.
+Verified on 23 October 2026 against **https://mr-egr.github.io/SchengenStay/**,
+read from the Pages API (workflow source, public, HTTPS enforced). Repository
+visibility was independently confirmed PUBLIC through the anonymous API. The
+`github-pages` environment permits only `main`.
+
+Preparation commit `bae0d1b` passed Ubuntu and Windows in
+[push CI](https://github.com/Mr-Egr/SchengenStay/actions/runs/39958984334) and the
+[publishing workflow](https://github.com/Mr-Egr/SchengenStay/actions/runs/39959094048).
+The deployment job completed successfully after the complete checks matrix.
+
+Anonymous production checks (fresh contexts, installed Chrome 155 on Windows):
+
+- 26 UI/date/accessibility groups, all seven screens, EN/RU, light/dark, desktop,
+  tablet and mobile-sized layouts, typing/paste/year replacement/calendar controls.
+- 23 real Python integration groups and 99 full-result CPython/Pyodide comparisons:
+  inclusive 90/91 days, multiple/ongoing stays, fixed/max/earliest/comparison plans,
+  all six statuses, unknown/unsupported context, and complete edit/recalculate journey.
+- Consent/deletion/corruption, cancellation/stale responses, failed asset/runtime
+  loading and retry, offline behavior. No unexpected console errors; observed
+  calculation requests were static GETs only, with no travel history payloads.
+- Manifest and all 26 public application resource SHA-256 digests matched the local
+  build. Eight development/private paths returned 404. Manifest SHA-256:
+  `c5cae08345da95460bb71fc17f2cd2a4a8f4b4e5f25713f051cf57643973c60c`.
+
+Reproduce anonymous resource verification with:
+
+```sh
+python scripts/verify_site.py https://mr-egr.github.io/SchengenStay/
+```
+
+Set `SITE_URL=https://mr-egr.github.io/SchengenStay/` and run both browser scripts
+for the same production journeys. Local production-build testing additionally
+passed Chrome/Edge UI checks and Chrome/Edge/Firefox 153/Windows WebKit 26.5 real
+integration/parity suites. This does not establish Apple Safari, physical-device
+or screen-reader coverage.
+
+Production timings from one unthrottled session: first desktop calculation 2,623 ms;
+mobile viewport 2,350 ms; separate worker initialization 1,402 ms; warm requests
+median 0.4 ms, p95 3.1 ms. Stress cases: 500 records 51.0 ms, 10,000 occupied days
+883.5 ms, bounded 10,000-day search 4.5 ms, 100 scenarios 27.9 ms. Network/cache/CPU
+conditions vary; these are observations, not performance guarantees.
+
+No critical publication blocker remains in the checked scope. Warnings remain for
+CDN trust/availability, Pages response-header limitations, shared-origin storage,
+unverified physical/assistive environments and unsupported legal situations.
+Release tags/notes are created only after the final evidence commit passes CI;
+GitHub Releases and the annotated Git tag are the authoritative release records.

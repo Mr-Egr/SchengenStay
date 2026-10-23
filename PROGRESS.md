@@ -16,7 +16,7 @@ feature is added; the core Python algorithms and six-status contract are unchang
   imported stock/font license. Runtime binaries remain on the pinned CDN.
 - Added exact Python build/test pins and npm integrity lockfile; top-level
   official CI actions use verified commit SHAs and Node 24 runtimes.
-- Added allowlisted deterministic build: 28 files, 265,648 bytes, no dev artifacts,
+- Added allowlisted deterministic build: 28 files, 265,646 bytes, no dev artifacts,
   with SHA-256 manifest, stale ZIP checks and no recursive output cleanup.
 - Extended existing browser suites to test the built directory under the repository
   subpath or a supplied real Pages URL. The first interface run exposed a test
@@ -54,8 +54,30 @@ notices footer/referrer policy, portfolio screenshots and relevant documentation
 
 ### Publication evidence
 
-Pending remote quality checks, visibility/Pages settings, public-site verification
-and release. Preparation does not claim publication or a successful final release.
+Preparation commit `bae0d1b` passed both Ubuntu and Windows in push run
+[39958984334](https://github.com/Mr-Egr/SchengenStay/actions/runs/39958984334)
+and publishing run
+[39959094048](https://github.com/Mr-Egr/SchengenStay/actions/runs/39959094048).
+The latter deployed only after both platforms passed. Repository visibility is
+PUBLIC, verified through authenticated CLI and anonymous API. Pages uses Actions,
+HTTPS, and a `github-pages` environment restricted to `main`.
+
+The API-reported [live application](https://mr-egr.github.io/SchengenStay/) passed
+anonymous Chrome 155 production testing: all **26 UI/accessibility/date groups**,
+**23 real Python integration groups** and **99 complete CPython/Pyodide parity
+cases**. This includes all seven screens, EN/RU, both themes, desktop/tablet/phone
+viewports, 90/91 days, all planner modes, context gates, saving/deletion, failure
+recovery and stale responses. No unexpected console errors or network requests;
+only static GETs to the site and pinned runtime CDN, without history payloads.
+
+Added `scripts/verify_site.py`: anonymous HTTPS manifest and 26 asset digests
+match the local tested build; eight private/development paths return 404.
+Production desktop first calculation measured 2,623 ms, mobile viewport 2,350 ms;
+warm worker median 0.4 ms / p95 3.1 ms. These are single-session observations,
+not latency guarantees. Exact evidence and remaining warnings are in the guide.
+README now links the verified application; screenshots are actual browser captures.
+The annotated tag and GitHub release are a final delivery step after the evidence
+commit also passes CI; their authoritative records are Git tags and GitHub Releases.
 Exact commands, permission boundaries and remaining limitations:
 [deployment guide](docs/DEPLOYMENT.md). No Stage 9 work is authorized.
 
