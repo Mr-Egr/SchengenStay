@@ -95,7 +95,14 @@ export function settings(ctx) {
         field('language', t('settings.language'), { value: ctx.language, options: [['en', 'English'], ['ru', 'Русский']], onChange: event => ctx.setLanguage(event.target.value), 'data-focus': 'language' })]),
       panel(t('settings.appearance'), [h('p', { className: 'muted' }, t('settings.appearanceBody')),
         h('div', { className: 'theme-options', role: 'group', 'aria-label': t('settings.appearance') }, ['light', 'dark'].map(theme => button(t(`settings.${theme}`), () => ctx.setTheme(theme), { symbol: theme === 'light' ? 'sun' : 'moon', 'aria-pressed': String(ctx.theme === theme), 'data-focus': `theme-${theme}` })))]),
-      panel(t('settings.privacy'), [h('p', {}, t('settings.privacyBody')), checkbox('saving', t('storage.consent'), ctx.saving, ctx.setSaving), h('p', {}, t(ctx.saving ? 'storage.enabled' : 'storage.disabled')), button(t('storage.delete'), () => ctx.setSaving(false)), ctx.storageError ? h('p', { role: 'alert' }, codeText(ctx, 'runtimeError', ctx.storageError)) : null])),
+      panel(t('settings.privacy'), [h('p', {}, t('settings.privacyBody')), checkbox('saving', t('storage.consent'), ctx.saving, ctx.setSaving), h('p', {}, t(ctx.saving ? 'storage.enabled' : 'storage.disabled')), button(t('storage.delete'), () => ctx.setSaving(false)), ctx.storageError ? h('p', { role: 'alert' }, codeText(ctx, 'runtimeError', ctx.storageError)) : null]),
+      panel(t('analytics.title'), [h('p', {}, t('analytics.explanation')),
+        checkbox('analytics', t('analytics.choice'), ctx.analyticsAllowed, ctx.setAnalytics),
+        h('p', { role: 'status' }, t(ctx.analyticsAllowed ? 'analytics.saved' : 'analytics.off')),
+        h('p', { className: 'muted' }, t('analytics.blocked')),
+        button(t('analytics.withdraw'), () => ctx.setAnalytics(false)),
+        h('p', { className: 'muted' }, t('analytics.withdrawNote')),
+        ctx.analyticsError ? h('p', { role: 'alert' }, t(ctx.analyticsError)) : null])),
     h('aside', { className: 'integration-note' }, icon('lock'), h('div', {}, h('h2', {}, t('settings.later')), h('p', {}, t('settings.laterBody')))),
   ];
 }

@@ -1,4 +1,5 @@
 import { dateInputChecks } from './date-input-browser.mjs';
+import { analyticsConsentChecks } from './analytics-consent-browser.mjs';
 // Optional browser checks: Playwright is test tooling, never a web dependency.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -281,6 +282,7 @@ try {
     await failed.close();
   });
   await dateInputChecks({ browser, origin, check });
+  await analyticsConsentChecks({ browser, origin, check });
   await check('optional analytics module failure does not prevent workspace editing', async () => {
     const isolated = await browser.newContext();
     await isolated.route('**/scripts/analytics.js', route => route.abort());

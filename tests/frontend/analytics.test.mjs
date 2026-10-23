@@ -1,79 +1,88 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { startAnalytics } from '../../web/scripts/analytics.js';
 import { analyticsConfig } from '../../web/scripts/analytics-config.js';
 import { messages } from '../../web/scripts/i18n.js';
+import { createAnalyticsPreference, decodeAnalyticsPreference, ANALYTICS_KEY,
+  ANALYTICS_MAX_AGE, createPersistence, STORAGE_KEY } from '../../web/scripts/storage.js';
 
-// Synthetic shape-only fixture, never registered, deployed or sent over a network.
-const config = { enabled: true, reviewed: true, siteToken: randomBytes(16).toString('hex') };
-function environment() {
-  const scripts = [];
-  const env = {
-    location: { href: 'https://mr-egr.github.io/SchengenStay/#history' }, navigator: {},
-    document: {
-      referrer: '', getElementById: id => scripts.find(item => item.id === id),
-      createElement: tag => ({ tag, attributes: {}, listeners: {},
-        setAttribute(key, value) { this.attributes[key] = value; },
-        addEventListener(key, callback) { this.listeners[key] = callback; },
-        remove() { scripts.splice(scripts.indexOf(this), 1); },
-      }),
-      head: { append: script => scripts.push(script) },
-      get forms() { throw new Error('Must never read application inputs'); },
-    },
-  };
-  return { env, scripts };
+function setup() {
+  const values = new Map();
+  let time = 1000000000000;
+  const storage = { getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
+  const create = () => createAnalyticsPreference(() => storage, () => time);
+  return { values, storage, create, advance: ms => { time += ms; }, now: () => time };
 }
 
-test('shipped analytics is off with no invented token, no document or network access', () => {
-  assert.deepEqual(analyticsConfig, { enabled: false, siteToken: null, reviewed: false });
-  assert.equal(startAnalytics(), false);
-  assert.doesNotMatch(readFileSync('web/index.html', 'utf8'), /cloudflareinsights/);
-});
-
-test('missing, malformed and unreviewed configuration fails closed', () => {
-  for (const value of [null, {}, { ...config, enabled: false }, { ...config, reviewed: false },
-    ...[null, '', 'replace-me', '<script>', 123, 'abc?x=private'].map(siteToken => ({ ...config, siteToken }))]) {
-    const { env, scripts } = environment();
-    assert.equal(startAnalytics(value, env), false);
-    assert.equal(scripts.length, 0);
-  }
-});
-
-test('only fixed canonical pages without private URLs or referrers are eligible', () => {
-  for (const href of ['http://mr-egr.github.io/SchengenStay/', 'https://example.com/',
-    'https://mr-egr.github.io/Other/', 'https://mr-egr.github.io/SchengenStay/?date=2026-09-30',
-    'https://mr-egr.github.io/SchengenStay/#private-note', 'not a URL']) {
-    const { env, scripts } = environment(); env.location.href = href;
-    assert.equal(startAnalytics(config, env), false); assert.equal(scripts.length, 0);
-  }
-  for (const setting of ['referrer', 'globalPrivacyControl', 'doNotTrack']) {
-    const { env } = environment();
-    if (setting === 'referrer') env.document.referrer = 'https://example.com/?private';
-    else env.navigator[setting] = setting === 'doNotTrack' ? '1' : true;
+test('privacy gate cannot be bypassed by a token, opt-in or configuration flags', () => {
+  assert.equal(analyticsConfig.enabled, false);
+  assert.equal(analyticsConfig.reviewed, false);
+  assert.equal(analyticsConfig.siteToken, '12c97c38d76a4f0c97f7893c2c0cf0c4');
+  const env = new Proxy({}, { get() { throw new Error('Must not touch browser or network'); } });
+  for (const config of [null, {}, analyticsConfig, { ...analyticsConfig, enabled: true, reviewed: true, consent: true }]) {
     assert.equal(startAnalytics(config, env), false);
   }
+  assert.doesNotMatch(readFileSync('web/index.html', 'utf8'), /cloudflareinsights/);
+  assert.doesNotMatch(readFileSync('web/scripts/analytics.js', 'utf8'), /createElement|append|fetch|sendBeacon/);
 });
 
-test('isolated loader uses only the official async beacon and token with SPA tracking off', () => {
-  const { env, scripts } = environment();
-  assert.equal(startAnalytics(config, env), true);
-  const [script] = scripts;
-  assert.equal(script.src, 'https://static.cloudflareinsights.com/beacon.min.js');
-  assert.equal(script.type, 'module'); assert.equal(script.async, true);
-  assert.equal(script.referrerPolicy, 'no-referrer');
-  assert.deepEqual(JSON.parse(script.attributes['data-cf-beacon']), { token: config.siteToken, spa: false });
-  assert.deepEqual(Object.keys(script.listeners), ['error']);
-  assert.equal(startAnalytics(config, env), false);
-  assert.equal(scripts.length, 1);
-  script.listeners.error(); assert.equal(scripts.length, 0);
+test('analytics starts off, writes nothing until a choice, and persists only a versioned preference', () => {
+  const s = setup(), p = s.create(); p.load();
+  assert.equal(p.allowed, false); assert.equal(s.values.size, 0);
+  p.set(true);
+  const data = JSON.parse(s.values.get(ANALYTICS_KEY));
+  assert.deepEqual(data, { schema_version: 1, notice_version: 1, allowed: true, expires_at: s.now() + ANALYTICS_MAX_AGE });
+  const next = s.create(); next.load(); assert.equal(next.allowed, true);
+  assert.equal(startAnalytics(), false);
 });
 
-test('DOM or loading failures never throw into application initialization', () => {
-  assert.equal(startAnalytics(config, {}), false);
-  const { env } = environment(); env.document.head.append = () => { throw new Error('blocked'); };
-  assert.equal(startAnalytics(config, env), false);
+test('history saving and analytics choice never grant, erase or modify each other', () => {
+  const s = setup(), p = s.create(), history = createPersistence(() => s.storage);
+  p.set(true); const preference = s.values.get(ANALYTICS_KEY);
+  history.enable(); history.save([], 'en', 'light');
+  assert.equal(s.values.get(ANALYTICS_KEY), preference);
+  const historyText = s.values.get(STORAGE_KEY);
+  p.set(false); assert.equal(s.values.get(STORAGE_KEY), historyText);
+  p.set(true); history.disable();
+  assert.equal(s.values.get(ANALYTICS_KEY), preference);
+  assert.equal(s.values.has(STORAGE_KEY), false);
+});
+
+test('malformed, unknown, duplicate, old-notice and expired records fail closed', () => {
+  const s = setup(); const p = s.create(); p.set(true);
+  const text = s.values.get(ANALYTICS_KEY), data = JSON.parse(text);
+  for (const bad of ['{broken', 'null', '[]', 'x'.repeat(201), text.replace('"allowed":true', '"allowed":false,"allowed":true'),
+    ...[{ schema_version: 2 }, { notice_version: 2 }, { allowed: 'true' }, { trips: [] },
+      { expires_at: s.now() }, { expires_at: s.now() + ANALYTICS_MAX_AGE + 1 },
+      { expires_at: null }].map(change => JSON.stringify({ ...data, ...change }))]) {
+    assert.throws(() => decodeAnalyticsPreference(bad, s.now()));
+    s.values.set(ANALYTICS_KEY, bad); p.load(); assert.equal(p.allowed, false); assert.equal(p.error, 'analytics.invalid');
+  }
+  s.values.set(ANALYTICS_KEY, text); p.load(); s.advance(ANALYTICS_MAX_AGE); p.sync();
+  assert.equal(p.allowed, false);
+});
+
+test('withdrawal propagates across tabs; another tab cannot silently grant consent', () => {
+  const s = setup(), a = s.create(), b = s.create(); a.load(); b.load();
+  a.set(true); b.sync(); assert.equal(b.allowed, false);
+  b.load(); assert.equal(b.allowed, true);
+  a.set(false); b.sync(); assert.equal(b.allowed, false);
+  a.set(true); s.values.delete(ANALYTICS_KEY); a.sync(); assert.equal(a.allowed, false);
+});
+
+test('storage errors are visible and withdrawal falls back to deleting only its own key', () => {
+  const s = setup(), p = s.create(); p.set(true);
+  s.values.set(STORAGE_KEY, 'untouched');
+  s.storage.setItem = () => { throw new Error('denied'); };
+  p.set(false); assert.equal(p.allowed, false); assert.equal(p.error, null);
+  assert.equal(s.values.has(ANALYTICS_KEY), false); assert.equal(s.values.get(STORAGE_KEY), 'untouched');
+  p.set(true); assert.equal(p.error, 'analytics.saveError');
+  s.storage.removeItem = () => { throw new Error('denied'); };
+  p.set(false); assert.equal(p.allowed, false); assert.equal(p.error, 'analytics.withdrawError');
+  const denied = createAnalyticsPreference(() => { throw new Error('denied'); });
+  denied.load(); assert.equal(denied.allowed, false); assert.equal(denied.error, 'analytics.invalid');
 });
 
 test('all EN/RU interface vocabulary uses user-oriented calculation labels', () => {

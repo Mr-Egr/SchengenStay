@@ -899,8 +899,17 @@ EN/RU interface text describes the calculator and on-device processing without
 runtime implementation labels. Python, JSON contracts, worker/bridge, storage,
 date editor and view structure are unchanged. See the [exact copy audit](docs/UI_COPY.md).
 
-Independently imported `analytics.js` reads only static configuration and URL/privacy
-guards. It has no application-state, form, calculation or storage dependency.
-The official beacon remains disabled: no token, completed review or CSP allowance.
-Optional adapter errors do not affect startup. Activation and collection/consent
-limitations are in [analytics preparation](docs/ANALYTICS.md).
+The optional `analytics.js` adapter now fails closed without a provider-loading
+path. The owner-supplied public token remains inactive; CSP excludes Cloudflare.
+Deleting an injected beacon script cannot undo its listeners, and the tested
+opaque-origin iframe failed collection. The application therefore implements only
+the requested safe consent preparation, not active tracking.
+
+Settings adds one existing-style EN/RU panel. `storage.js` owns the separate,
+versioned, 180-day analytics choice; it never stores travel data in that record.
+Unknown/expired/corrupt choices fail closed. Cross-tab events propagate withdrawal,
+not automatic grants. History persistence, results and calculation contracts are
+unchanged. Notice version 1 cannot authorize a future activation: a new notice and
+fresh affirmative consent are required. Optional adapter errors cannot block
+startup. Evidence, schema and remaining activation gates are in
+[analytics preparation](docs/ANALYTICS.md).

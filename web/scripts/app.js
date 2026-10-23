@@ -1,6 +1,6 @@
 import { createDateDraft, validateDateFields } from './date-input.js';
 import { PythonBridge, LatestResults, calculationRequest } from './pyodide-bridge.js';
-import { createPersistence } from './storage.js';
+import { createPersistence, createAnalyticsPreference, ANALYTICS_KEY } from './storage.js';
 import { h, icon, button, announce } from './dom.js';
 import { createStore } from './store.js';
 import { todayISO } from './dates.js';
@@ -11,6 +11,8 @@ import * as views from './views.js';
 const today = todayISO();
 const persistence = createPersistence();
 const restored = persistence.load(today);
+const analyticsPreference = createAnalyticsPreference();
+analyticsPreference.load();
 const state = { language: restored.data?.language ?? 'en', theme: restored.data?.theme ?? 'light', month: today.slice(0, 7), selectedDay: today, checkDate: today, complete: false, scope: 'UNKNOWN', ongoing: false, budget: 10000, runtime: 'idle', runtimeError: null, storageError: restored.error ?? null };
 state.checkDateDraft = createDateDraft(today, state.language);
 state.legalKind = 'ARITHMETIC_ONLY';
@@ -79,6 +81,8 @@ function render(focus = false) {
   document.querySelector('.skip-link').textContent = t('app.skip');
   const ctx = {
     ...state, today, t, store, results: results.values, saving: persistence.enabled,
+    analyticsAllowed: analyticsPreference.allowed, analyticsError: analyticsPreference.error,
+    setAnalytics: allowed => { analyticsPreference.set(allowed); render(); document.getElementById('field-analytics')?.focus(); },
     busy: [...results.values.values()].some(item => item.state === 'loading'),
     runHistory, runScenario, compareScenarios,
     cancelCalculation: () => { results.invalidate(); bridge.cancel(); render(); },
@@ -180,5 +184,10 @@ document.addEventListener('keydown', event => {
     button.setAttribute('aria-expanded', 'false');
     button.focus();
   }
+});
+window.addEventListener('storage', event => {
+  if (event.key !== ANALYTICS_KEY && event.key !== null) return;
+  analyticsPreference.sync();
+  if (route() === 'settings') render();
 });
 render();

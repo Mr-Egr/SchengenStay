@@ -1,5 +1,57 @@
 # Progress record
 
+## 2026-10-23 — Separate analytics consent; activation remains blocked
+
+Started at synchronized `59a854a`. Reviewed the prepared loader, Settings, EN/RU
+copy, storage, route handling, privacy records, CI and Pages configuration. The
+owner supplied the public Cloudflare site token and explicitly authorized safe
+consent preparation if privacy/technical activation gates could not be satisfied.
+
+Added a minimal Settings panel using existing components and styles: default-off
+opt-in, withdrawal, provider/URL/referrer/performance disclosures, no anonymity
+promise, and an explicit inactive status even after choosing opt-in. The separate
+validated preference expires after 180 days, carries schema/notice versions and
+contains no history or identifiers. Invalid/expired records fail closed. Other
+tabs receive withdrawal but cannot automatically grant an open tab consent.
+Storage denial and failed withdrawal persistence are explained. Travel-history
+saving/deletion and calculation results remain independent. Fresh consent is
+required before any later activation; current preparation grants cannot be reused.
+
+**Activation blocked:** the official beacon installs listeners/observers; removing
+its script is not a verified stop mechanism. Main-document access does not isolate
+travel inputs. A private synthetic opaque-origin iframe probe, after an explicit
+test-consent click, loaded the official script (HTTP 200) and blocked parent DOM
+access, but its collection attempt failed with an origin-null CORS error. No
+successful ingestion or dashboard counts were verified. Frame performance is also
+not equivalent to application performance. The [audit and exact error](docs/ANALYTICS.md)
+record script hash/version, official sources, legal uncertainty and activation
+gates. The public token is retained inactive; CSP still excludes Cloudflare.
+Removed the unsafe direct-injection path rather than claim script removal stops
+tracking. No probe/harness or vendor script is part of the production artifact.
+
+Local verification: **411 Python tests**, **43 frontend unit/static tests**, **33
+Chrome UI/date/accessibility groups**, **24 real Python/browser groups and 99
+CPython/Pyodide full-result parity cases**, all passed. Consent tests cover default
+off, reload, keyboard use, withdrawal, cross-tab propagation, corrupted/expired
+choices, blocked storage, independent history deletion, preserved real 90-day
+results, and no Cloudflare connections even after opt-in. EN/RU and both themes
+fit 320/768/1440px; existing seven-screen/date/worker journeys remain green.
+Ruff, pip consistency, deterministic Python archive/site build and documentation
+links/examples passed (64 local links/anchors and five executable examples).
+Playwright 1.62.1 matches the manifest and lockfile. The targeted publication scan
+found no secret/private-path patterns in 244 reachable blobs and 97 candidate
+files; unchanged screenshot assets retain their earlier review. The site still
+contains 30 allowlisted files. No CSS,
+assets, navigation, date arithmetic, planner, Python bridge, dependency, workflow,
+release or tag changes. Only the new Settings section changes the rendered views.
+
+Changed frontend files: analytics config/adapter, preference storage, app wiring,
+Settings view and integration localization. Added browser consent/privacy coverage;
+updated analytics unit checks and both browser suite entry points. Updated README,
+architecture, frontend and analytics documentation. Remote CI and anonymous public
+verification are performed after push and reported in delivery; activation remains
+blocked regardless of successful software checks.
+
 ## 2026-10-23 — Post-release copy and inactive analytics preparation
 
 Starting from clean `5c79726`, inspected frontend/localization, bridge/storage,

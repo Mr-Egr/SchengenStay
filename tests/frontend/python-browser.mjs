@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { contextChecks } from './context-browser.mjs';
 import { releaseChecks } from './release-browser.mjs';
+import { analyticsCalculationCheck } from './analytics-consent-browser.mjs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
@@ -271,6 +272,7 @@ try {
   });
   await contextChecks({ browser, origin, check });
   await releaseChecks({ browser, origin, check });
+  await analyticsCalculationCheck({ browser, origin, check });
   console.log(`${checks} Python/browser integration checks and ${cases.length} full-result parity cases passed in ${browserName} ${browser.version()}.`);
 } finally {
   await browser?.close();

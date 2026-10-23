@@ -1,6 +1,17 @@
 // Presentation-only vocabulary. Codes come from Python, never from JS arithmetic.
 export const integrationMessages = { en: {}, ru: {} };
 const copy = {
+  'analytics.title': ['Optional website analytics', 'Необязательная аналитика сайта'],
+  'analytics.explanation': ['Cloudflare Web Analytics can measure page views, page URLs/referrers and technical performance. Cloudflare is a third party and receives network metadata. This is not a guarantee of anonymity. Travel dates, trip labels, notes, visa information and calculation results must stay on your device.', 'Cloudflare Web Analytics может собирать просмотры страниц, URL страниц и источников перехода, а также технические показатели работы. Cloudflare — сторонний сервис, получающий сетевые метаданные. Анонимность не гарантируется. Даты, названия и заметки поездок, сведения о визах и результаты расчётов должны оставаться на вашем устройстве.'],
+  'analytics.choice': ['Allow optional Cloudflare website analytics', 'Разрешить необязательную аналитику сайта Cloudflare'],
+  'analytics.off': ['Analytics preference: off. No analytics requests are sent.', 'Настройка аналитики: выключено. Запросы аналитики не отправляются.'],
+  'analytics.saved': ['Preference selected. Analytics is still inactive.', 'Предпочтение выбрано. Аналитика по-прежнему неактивна.'],
+  'analytics.blocked': ['Activation is blocked pending privacy and withdrawal verification. This preference alone cannot start tracking; fresh consent will be required before activation. The choice is stored separately from travel history for up to 180 days.', 'Включение заблокировано до проверки приватности и отзыва согласия. Этот выбор сам по себе не запускает аналитику; перед включением потребуется новое согласие. Выбор хранится отдельно от истории поездок до 180 дней.'],
+  'analytics.withdraw': ['Withdraw analytics consent', 'Отозвать согласие на аналитику'],
+  'analytics.withdrawNote': ['You can withdraw here at any time without affecting your trips or calculations. Already transmitted requests cannot be recalled.', 'Согласие можно отозвать здесь в любое время без влияния на поездки и расчёты. Уже отправленные запросы невозможно отозвать.'],
+  'analytics.invalid': ['The saved analytics preference is expired or unreadable. Analytics remains off; choose again if you wish.', 'Сохранённая настройка аналитики устарела или повреждена. Аналитика выключена; при желании выберите заново.'],
+  'analytics.saveError': ['The choice could not be saved. It applies only in this tab; analytics remains inactive.', 'Выбор не удалось сохранить. Он действует только в этой вкладке; аналитика неактивна.'],
+  'analytics.withdrawError': ['Consent is withdrawn in this tab, but the browser blocked saving that change. Clear this site’s data in browser settings to remove the old saved choice. Analytics remains inactive.', 'Согласие отозвано в этой вкладке, но браузер не сохранил изменение. Очистите данные сайта в настройках браузера, чтобы удалить прежний выбор. Аналитика неактивна.'],
   'app.licenses': ['License & third-party notices', 'Лицензия и сторонние компоненты'],
   'date.format': ['DD/MM/YYYY', 'ДД.ММ.ГГГГ'],
   'date.hint': ['DD/MM/YYYY. You can also paste a complete YYYY-MM-DD date.', 'ДД.ММ.ГГГГ. Можно также вставить полную дату ГГГГ-ММ-ДД.'],

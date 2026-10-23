@@ -1,7 +1,11 @@
 # Browser application
 
 Post-release UI copy is listed in [the EN/RU audit](UI_COPY.md). Optional Cloudflare
-analytics is [prepared but disabled](ANALYTICS.md); no analytics requests occur.
+analytics is [prepared but disabled](ANALYTICS.md); no analytics requests occur,
+including after selecting the new independent Settings preference. Its versioned
+180-day choice is separate from travel-history saving. Withdrawal preserves trips
+and calculations; fresh consent is required before any future activation. The
+privacy/collection lifecycle remains blocked; see the linked audit evidence.
 
 Stage 5 connects the seven-screen HTML/CSS/vanilla JavaScript interface to the
 existing Python package using **Pyodide 314.0.7** in a module Web Worker. There is

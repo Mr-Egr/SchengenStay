@@ -21,7 +21,8 @@ rule, including both arrival and departure days.
 
 Travel records are processed locally. No accounts, analytics, ads, paid APIs or
 application backend. Runtime downloads still contact the hosting/CDN providers.
-Optional [website analytics is prepared but disabled](docs/ANALYTICS.md).
+Independent analytics consent controls are prepared;
+[website analytics remains disabled](docs/ANALYTICS.md).
 See the [mobile screenshot](docs/images/overview-mobile.png).
 
 ## Engineering
@@ -33,7 +34,7 @@ second day-rule implementation in JavaScript. Immutable models, bounded searches
 worker cancellation and stale-response protection keep results interpretable.
 GitHub Actions checks Windows and Ubuntu before publishing the tested static artifact.
 
-Verification includes **411 Python tests**, **18 Hypothesis properties**, **36
+Verification includes **411 Python tests**, **18 Hypothesis properties**, **43
 frontend unit tests**, real-browser journeys, and **99 CPython/Pyodide parity
 comparisons**. Six published Commission examples and twelve live-calculator cases
 were checked in Stage 7. Exact coverage and limitations are in the
