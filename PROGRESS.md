@@ -1,5 +1,43 @@
 # Progress record
 
+## 2026-10-24 — Recruiter-facing repository presentation
+
+Started from clean, synchronized `15d2014`. Reviewed the existing README,
+contributing/setup guide, Python exports, browser/JSON bridge documentation,
+privacy and legal limits, MIT/package notices, QA evidence, build allowlist,
+Windows/Ubuntu workflow and actual public repository/application.
+
+Updated README with a one-sentence product description, prominent Live Demo and
+Source Code links, the rolling-window counting problem, five verified features,
+a compact Mermaid architecture diagram, and a Testing & Quality section without
+hardcoded test counts. Kept the legal disclaimer prominent and explicitly states
+Cloudflare remains disabled even after choosing the prepared consent preference.
+Quick Start separates the no-build static preview from Python/Node development
+and real-browser tests. Existing detailed documentation remains linked.
+
+Captured three direct Chrome screenshots of the public application: empty English
+light-theme overview, a real Python calculation using a synthetic 30-day trip,
+and the Russian dark-theme date picker at a mobile-sized viewport. No DOM edits,
+mock results or personal data. Added [capture provenance](docs/images/README.md);
+older technical screenshots remain intact. New screenshots were visually reviewed.
+
+Verification passed: 411 pytest/Hypothesis tests, 43 Node frontend tests, Ruff,
+pip consistency, deterministic Python archive and unchanged production build,
+local documentation links/API examples, and targeted publication/history scan
+(259 reachable blobs and 101 candidate files before this progress entry).
+GitHub's GFM API rendered the README with three alt-labelled images, a disclosure
+section and Mermaid block intact. Diagram rendering on GitHub is checked after
+push. Anonymous live-site verification matched the manifest and 28 resource
+digests, with eight development/private paths returning 404. The screenshot
+calculation actually returned 30 used / 60 remaining arithmetic days.
+
+Only README, this progress record, screenshot provenance and three image assets
+change. No application, localization, styles, calculations, dependencies, workflows,
+deployment or release/tag changes. Existing push CI reruns the full Windows/Ubuntu
+browser/parity checks; its actual post-push result is reported in delivery.
+Repository About/topic suggestions are provided for the owner to apply manually;
+no separate profile repository is created.
+
 ## 2026-10-23 — Separate analytics consent; activation remains blocked
 
 Started at synchronized `59a854a`. Reviewed the prepared loader, Settings, EN/RU
